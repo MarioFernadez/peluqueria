@@ -28,4 +28,16 @@ class Barber extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(BarberSchedule::class);
+    }
+
+    public function totalRevenue(): float
+    {
+        return (float) $this->appointments()
+            ->where('payment_status', 'pagado')
+            ->sum('total_price');
+    }
 }

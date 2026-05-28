@@ -21,4 +21,9 @@ class Service extends Model
         'is_active' => 'boolean',
         'price' => 'decimal:2',
     ];
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }

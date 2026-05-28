@@ -20,7 +20,19 @@ class Membership extends Model
 
     protected $casts = [
         'included_services' => 'array',
-        'is_active' => 'boolean',
-        'price' => 'decimal:2',
+        'is_active'         => 'boolean',
+        'price'             => 'decimal:2',
     ];
+
+    public function clientMemberships()
+    {
+        return $this->hasMany(ClientMembership::class);
+    }
+
+    public function activeClients()
+    {
+        return $this->clientMemberships()
+            ->where('end_date', '>=', now()->toDateString())
+            ->where('payment_status', 'pagado');
+    }
 }

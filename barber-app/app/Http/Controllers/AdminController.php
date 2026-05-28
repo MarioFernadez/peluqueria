@@ -9,6 +9,9 @@ use App\Models\Barber;
 use App\Models\Service;
 use App\Models\Membership;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\ClientMembership;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -50,15 +53,56 @@ class AdminController extends Controller
             return redirect()->route('admin.login');
         }
 
-        $appointments = Appointment::with(['barber', 'service'])->orderBy('appointment_date', 'desc')->orderBy('appointment_time', 'desc')->get();
-        $barbers = Barber::all();
-        $services = Service::all();
+        $today = now()->toDateString();
+
+        // Citas de hoy
+        $todayAppointments = Appointment::with(['barber', 'service', 'client'])
+            ->whereDate('appointment_date', $today)
+            ->orderBy('appointment_time')
+            ->get();
+
+        // Métricas del día
+        $todayRevenue = Payment::whereDate('paid_at', $today)->sum('amount');
+        $todayCount   = $todayAppointments->count();
+
+        // Métricas del mes
+        $monthRevenue     = Payment::whereMonth('paid_at', now()->month)->whereYear('paid_at', now()->year)->sum('amount');
+        $newClientsMonth  = Client::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+        $activeMemberships = ClientMembership::where('end_date', '>=', $today)->where('payment_status', 'pagado')->count();
+
+        // Próximos vencimientos de membresías (7 días)
+        $expiringSoon = ClientMembership::with(['client', 'membership'])
+            ->where('end_date', '>=', $today)
+            ->where('end_date', '<=', now()->addDays(7)->toDateString())
+            ->where('payment_status', 'pagado')
+            ->orderBy('end_date')
+            ->limit(5)
+            ->get();
+
+        // Barbero con más citas este mes
+        $topBarber = Barber::withCount(['appointments as month_appointments' => function ($q) {
+                $q->whereMonth('appointment_date', now()->month)->whereYear('appointment_date', now()->year);
+            }])->orderByDesc('month_appointments')->first();
+
+        // Servicios más vendidos (mes)
+        $topServices = Service::withCount(['appointments as month_count' => function ($q) {
+                $q->whereMonth('appointment_date', now()->month)->whereYear('appointment_date', now()->year);
+            }])->orderByDesc('month_count')->limit(5)->get();
+
+        // Datos para el panel de gestión
+        $barbers     = Barber::all();
+        $services    = Service::all();
         $memberships = Membership::all();
+        $totalTurnos = Appointment::count();
+        $totalCaja   = Payment::sum('amount');
 
-        $totalCaja = $appointments->sum('total_price');
-        $totalTurnos = $appointments->count();
-
-        return view('admin.dashboard', compact('appointments', 'barbers', 'services', 'memberships', 'totalCaja', 'totalTurnos'));
+        return view('admin.dashboard', compact(
+            'todayAppointments', 'todayRevenue', 'todayCount',
+            'monthRevenue', 'newClientsMonth', 'activeMemberships',
+            'expiringSoon', 'topBarber', 'topServices',
+            'barbers', 'services', 'memberships',
+            'totalTurnos', 'totalCaja'
+        ));
     }
 
     // Acciones básicas para turnos
