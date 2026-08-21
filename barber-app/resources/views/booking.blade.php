@@ -1021,7 +1021,7 @@
                         const result = await res.json();
                         this.appointmentId = result.appointment?.id || Math.floor(Math.random() * 90000 + 10000);
 
-                        if (res.ok && result.success && result.appointment?.id) {
+                        if (result.success && result.appointment?.id) {
                             const booking = {
                                 appointment_id: result.appointment.id,
                                 date:           this.selectedDate,
@@ -1037,15 +1037,14 @@
 
                             // Disparar notificación push al admin
                             this.notifyAdmin(booking);
-                            
                             this.step = 5;
                             this.showToast('✅ ¡Turno #' + this.appointmentId + ' confirmado!');
                         } else {
-                            const errorMsg = result.message || 'Faltan datos de Barberos o Servicios en el panel.';
-                            this.showToast('❌ Error: ' + errorMsg);
+                             const errorMsg = result.message || 'Faltan datos en el panel. Asegurate de crear al barbero y servicio.';
+                             this.showToast('❌ Error: ' + errorMsg);
                         }
-                    } catch (e) {
-                        this.showToast('❌ Ocurrió un error de red al intentar reservar.');
+                    } catch {
+                        this.showToast('❌ Ocurrió un error al intentar reservar.');
                     } finally {
                         this.isSubmitting = false;
                     }
