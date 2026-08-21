@@ -5,13 +5,79 @@
 
 @section('content')
 
-<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+<style>
+    .client-profile-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 1.5rem;
+    }
+    .client-history-table { display: block; }
+    .client-history-mobile { display: none; }
+
+    /* Breadcrumb responsivo */
+    .client-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .client-breadcrumb .client-name-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+        .client-profile-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .client-history-table { display: none !important; }
+        .client-history-mobile { display: block !important; }
+
+        .client-breadcrumb { gap: 0.5rem; }
+        .client-breadcrumb .client-name-label { max-width: 150px; }
+    }
+
+    @media (max-width: 480px) {
+        .client-breadcrumb .client-name-label { max-width: 120px; font-size: 0.82rem; }
+        /* Membresía historial: fechas en una línea más corta */
+        .membership-date-range { font-size: 0.62rem; }
+    }
+
+    @media (max-width: 360px) {
+        .client-breadcrumb .client-name-label { max-width: 90px; font-size: 0.78rem; }
+    }
+
+    .history-item {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.6rem;
+    }
+    .history-item:last-child { margin-bottom: 0; }
+    .history-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.4rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+</style>
+
+
+<div class="client-breadcrumb">
     <a href="{{ route('admin.clients.index') }}" class="btn btn-ghost btn-sm">← Volver</a>
     <span style="color:var(--muted);">/</span>
-    <span style="font-size:0.9rem;font-weight:600;">{{ $client->name }}</span>
+    <span class="client-name-label">{{ $client->name }}</span>
 </div>
 
-<div class="grid gap-6" style="grid-template-columns:320px 1fr;">
+<div class="client-profile-grid gap-6">
 
     {{-- ── Columna izquierda: Datos del cliente ─────────────────────────── --}}
     <div style="display:flex;flex-direction:column;gap:1rem;">
@@ -113,7 +179,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid rgba(46,50,72,0.4);">
                     <div>
                         <div style="font-size:0.78rem;font-weight:500;">{{ $cm->membership->name ?? '—' }}</div>
-                        <div style="font-size:0.68rem;color:var(--muted);">
+                        <div class="membership-date-range" style="font-size:0.68rem;color:var(--muted);">
                             {{ $cm->start_date->format('d/m/Y') }} → {{ $cm->end_date->format('d/m/Y') }}
                         </div>
                     </div>
@@ -137,34 +203,55 @@
             @if($client->appointments->isEmpty())
                 <p style="color:var(--muted);font-size:0.85rem;">Sin turnos registrados.</p>
             @else
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                            <th>Barbero</th>
-                            <th>Servicio</th>
-                            <th>Estado</th>
-                            <th>Pago</th>
-                            <th>Método</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($client->appointments->sortByDesc('appointment_date') as $appt)
-                        <tr>
-                            <td style="font-weight:500;">{{ $appt->appointment_date->format('d/m/Y') }}</td>
-                            <td style="color:var(--muted);">{{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}</td>
-                            <td>{{ $appt->barber->name ?? '—' }}</td>
-                            <td>{{ $appt->service->name ?? '—' }}</td>
-                            <td>
-                                <span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span>
-                            </td>
-                            <td style="font-weight:600;color:var(--green);">${{ number_format($appt->total_price, 0, ',', '.') }}</td>
-                            <td style="color:var(--muted);font-size:0.78rem;">{{ $appt->payment_method ?? '—' }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                {{-- Desktop table --}}
+                <div class="client-history-table table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Barbero</th>
+                                <th>Servicio</th>
+                                <th>Estado</th>
+                                <th>Pago</th>
+                                <th>Método</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->appointments->sortByDesc('appointment_date') as $appt)
+                            <tr>
+                                <td style="font-weight:500;">{{ $appt->appointment_date->format('d/m/Y') }}</td>
+                                <td style="color:var(--muted);">{{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}</td>
+                                <td>{{ $appt->barber->name ?? '—' }}</td>
+                                <td>{{ $appt->service->name ?? '—' }}</td>
+                                <td><span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span></td>
+                                <td style="font-weight:600;color:var(--green);">${{ number_format($appt->total_price, 0, ',', '.') }}</td>
+                                <td style="color:var(--muted);font-size:0.78rem;">{{ $appt->payment_method ?? '—' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                {{-- Mobile cards --}}
+                <div class="client-history-mobile">
+                    @foreach($client->appointments->sortByDesc('appointment_date') as $appt)
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            <div style="font-weight:600;font-size:0.88rem;">
+                                {{ $appt->appointment_date->format('d/m/Y') }}
+                                <span style="color:var(--muted);font-weight:400;"> · {{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}</span>
+                            </div>
+                            <span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem 0.75rem;font-size:0.8rem;">
+                            <div><span style="font-size:0.67rem;color:var(--muted);display:block;text-transform:uppercase;">Barbero</span>{{ $appt->barber->name ?? '—' }}</div>
+                            <div><span style="font-size:0.67rem;color:var(--muted);display:block;text-transform:uppercase;">Servicio</span>{{ $appt->service->name ?? '—' }}</div>
+                            <div><span style="font-size:0.67rem;color:var(--muted);display:block;text-transform:uppercase;">Pago</span><strong style="color:var(--green);">\${{ number_format($appt->total_price, 0, ',', '.') }}</strong></div>
+                            <div><span style="font-size:0.67rem;color:var(--muted);display:block;text-transform:uppercase;">Método</span>{{ $appt->payment_method ?? '—' }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
             @endif
         </div>
 
@@ -174,32 +261,45 @@
             @if($client->payments->isEmpty())
                 <p style="color:var(--muted);font-size:0.85rem;">Sin pagos registrados.</p>
             @else
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Descripción</th>
-                            <th>Método</th>
-                            <th>Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($client->payments->sortByDesc('paid_at') as $pay)
-                        <tr>
-                            <td>{{ $pay->paid_at?->format('d/m/Y') ?? '—' }}</td>
-                            <td>
-                                <span class="badge-status" style="background:rgba(124,106,255,0.1);color:var(--accent2);">
-                                    {{ $pay->type }}
-                                </span>
-                            </td>
-                            <td style="color:var(--muted);font-size:0.8rem;">{{ $pay->description ?? '—' }}</td>
-                            <td style="color:var(--muted);">{{ $pay->method }}</td>
-                            <td style="font-weight:700;color:var(--green);">${{ number_format($pay->amount, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                {{-- Desktop table --}}
+                <div class="client-history-table table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Método</th><th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->payments->sortByDesc('paid_at') as $pay)
+                            <tr>
+                                <td>{{ $pay->paid_at?->format('d/m/Y') ?? '—' }}</td>
+                                <td><span class="badge-status" style="background:rgba(124,106,255,0.1);color:var(--accent2);">{{ $pay->type }}</span></td>
+                                <td style="color:var(--muted);font-size:0.8rem;">{{ $pay->description ?? '—' }}</td>
+                                <td style="color:var(--muted);">{{ $pay->method }}</td>
+                                <td style="font-weight:700;color:var(--green);">${{ number_format($pay->amount, 0, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                {{-- Mobile cards --}}
+                <div class="client-history-mobile">
+                    @foreach($client->payments->sortByDesc('paid_at') as $pay)
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            <div>
+                                <span class="badge-status" style="background:rgba(124,106,255,0.1);color:var(--accent2);">{{ $pay->type }}</span>
+                                <span style="font-size:0.75rem;color:var(--muted);margin-left:0.4rem;">{{ $pay->paid_at?->format('d/m/Y') ?? '—' }}</span>
+                            </div>
+                            <strong style="color:var(--green);">\${{ number_format($pay->amount, 0, ',', '.') }}</strong>
+                        </div>
+                        <div style="font-size:0.8rem;color:var(--text2);margin-top:0.25rem;">
+                            <span style="color:var(--muted);">Método:</span> {{ $pay->method }}
+                            @if($pay->description) · <span style="color:var(--muted);">{{ $pay->description }}</span> @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
             @endif
         </div>
 

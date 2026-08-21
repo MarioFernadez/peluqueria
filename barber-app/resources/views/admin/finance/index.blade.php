@@ -5,9 +5,64 @@
 
 @section('content')
 
+<style>
+    .finance-table-desktop { display: block; }
+    .finance-cards-mobile  { display: none; }
+
+    @media (max-width: 768px) {
+        .finance-table-desktop { display: none !important; }
+        .finance-cards-mobile  { display: block !important; }
+
+        .finance-period-form {
+            flex-direction: column !important;
+        }
+        .finance-period-form > * {
+            width: 100% !important;
+        }
+        .finance-custom-dates {
+            flex-direction: column !important;
+        }
+        .finance-main-cols {
+            grid-template-columns: 1fr !important;
+        }
+        .finance-stats-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    .pending-card {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.65rem;
+    }
+    .pending-card:last-child { margin-bottom: 0; }
+    .pending-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .pending-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.3rem 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text2);
+    }
+    .pending-card-body span {
+        font-size: 0.67rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        display: block;
+    }
+</style>
+
 {{-- Selector de período --}}
 <div class="card" style="margin-bottom:1.5rem;">
-    <form method="GET" action="{{ route('admin.finance.index') }}" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+    <form method="GET" action="{{ route('admin.finance.index') }}" class="finance-period-form" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
         <div>
             <label class="form-label">Período</label>
             <select name="period" class="form-control" onchange="toggleCustom(this.value)">
@@ -18,7 +73,7 @@
                 <option value="custom" {{ $period==='custom' ? 'selected':'' }}>Personalizado</option>
             </select>
         </div>
-        <div id="custom-dates" style="{{ $period==='custom' ? '' : 'display:none;' }} display:flex;gap:0.75rem;">
+        <div id="custom-dates" class="finance-custom-dates" style="{{ $period==='custom' ? '' : 'display:none;' }} display:flex;gap:0.75rem;flex-wrap:wrap;">
             <div>
                 <label class="form-label">Desde</label>
                 <input type="date" name="from" class="form-control" value="{{ request('from') }}">
@@ -28,13 +83,15 @@
                 <input type="date" name="to" class="form-control" value="{{ request('to') }}">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Aplicar</button>
-        <a href="{{ route('admin.finance.payments') }}" class="btn btn-ghost">Ver todos los pagos →</a>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">Aplicar</button>
+            <a href="{{ route('admin.finance.payments') }}" class="btn btn-ghost">Ver todos los pagos →</a>
+        </div>
     </form>
 </div>
 
 {{-- ── Métricas principales ────────────────────────────────────────────── --}}
-<div class="grid grid-cols-3 gap-4" style="margin-bottom:1.5rem;">
+<div class="grid finance-stats-grid gap-4" style="grid-template-columns:repeat(3,1fr); margin-bottom:1.5rem;">
 
     <div class="stat-card" style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.03));">
         <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💰</div>
@@ -61,7 +118,7 @@
 </div>
 
 {{-- ── Fila: Por método + Por tipo ────────────────────────────────────── --}}
-<div class="grid grid-cols-2 gap-6" style="margin-bottom:1.5rem;">
+<div class="grid finance-main-cols gap-6" style="grid-template-columns:repeat(2,1fr); margin-bottom:1.5rem;">
 
     {{-- Por método de pago --}}
     <div class="card">
@@ -139,41 +196,85 @@
 
 {{-- ── Pendientes de cobro ─────────────────────────────────────────────── --}}
 @if($pendingAppointments->count() > 0)
-<div class="card">
+
+{{-- Desktop table --}}
+<div class="card finance-table-desktop">
     <div class="card-title">⏳ Turnos pendientes de cobro</div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Cliente</th>
-                <th>Barbero</th>
-                <th>Servicio</th>
-                <th>Monto</th>
-                <th>Estado turno</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($pendingAppointments as $appt)
-            <tr>
-                <td>{{ $appt->appointment_date->format('d/m/Y') }}</td>
-                <td>
-                    @if($appt->client)
-                        <a href="{{ route('admin.clients.show', $appt->client) }}" style="color:var(--text);font-weight:500;">
-                            {{ $appt->client->name }}
-                        </a>
-                    @else
-                        {{ $appt->customer_name }}
-                    @endif
-                </td>
-                <td>{{ $appt->barber->name ?? '—' }}</td>
-                <td>{{ $appt->service->name ?? '—' }}</td>
-                <td style="font-weight:700;color:var(--yellow);">${{ number_format($appt->total_price, 0, ',', '.') }}</td>
-                <td><span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span></td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Barbero</th>
+                    <th>Servicio</th>
+                    <th>Monto</th>
+                    <th>Estado turno</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pendingAppointments as $appt)
+                <tr>
+                    <td>{{ $appt->appointment_date->format('d/m/Y') }}</td>
+                    <td>
+                        @if($appt->client)
+                            <a href="{{ route('admin.clients.show', $appt->client) }}" style="color:var(--text);font-weight:500;">
+                                {{ $appt->client->name }}
+                            </a>
+                        @else
+                            {{ $appt->customer_name }}
+                        @endif
+                    </td>
+                    <td>{{ $appt->barber->name ?? '—' }}</td>
+                    <td>{{ $appt->service->name ?? '—' }}</td>
+                    <td style="font-weight:700;color:var(--yellow);">${{ number_format($appt->total_price, 0, ',', '.') }}</td>
+                    <td><span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
+
+{{-- Mobile cards --}}
+<div class="finance-cards-mobile">
+    <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;padding:0 0.25rem;">
+        ⏳ Turnos pendientes de cobro
+    </div>
+    @foreach($pendingAppointments as $appt)
+    <div class="pending-card">
+        <div class="pending-card-header">
+            <div style="font-size:0.85rem;font-weight:600;">
+                @if($appt->client)
+                    <a href="{{ route('admin.clients.show', $appt->client) }}" style="color:var(--text);text-decoration:none;">{{ $appt->client->name }}</a>
+                @else
+                    {{ $appt->customer_name }}
+                @endif
+            </div>
+            <div style="font-size:1rem;font-weight:700;color:var(--yellow);">${{ number_format($appt->total_price, 0, ',', '.') }}</div>
+        </div>
+        <div class="pending-card-body">
+            <div>
+                <span>Fecha</span>
+                {{ $appt->appointment_date->format('d/m/Y') }}
+            </div>
+            <div>
+                <span>Barbero</span>
+                {{ $appt->barber->name ?? '—' }}
+            </div>
+            <div>
+                <span>Servicio</span>
+                {{ $appt->service->name ?? '—' }}
+            </div>
+            <div>
+                <span>Estado</span>
+                <span class="badge-status badge-{{ strtolower($appt->status) }}" style="margin-top:3px;">{{ $appt->status }}</span>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
 @endif
 
 @endsection

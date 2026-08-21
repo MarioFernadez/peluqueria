@@ -5,331 +5,741 @@
 
 @section('content')
 
-{{-- ── Métricas del día ──────────────────────────────────────────────────── --}}
-<div class="grid grid-cols-4 gap-4" style="margin-bottom:1.5rem;">
+<style>
+    /* ── Widget Customizer Panel ── */
+    .customizer-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        z-index: 400;
+    }
+    .customizer-overlay.open { display: block; }
 
-    <div class="stat-card">
-        <div class="icon-wrap" style="background:rgba(124,106,255,0.15);">📅</div>
-        <div class="label">Turnos hoy</div>
-        <div class="value">{{ $todayCount }}</div>
-        <div class="sub">{{ now()->format('d/m/Y') }}</div>
+    .customizer-panel {
+        position: fixed;
+        top: 0; right: 0;
+        width: 300px;
+        height: 100vh;
+        background: var(--surface);
+        border-left: 1px solid var(--border2);
+        box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+        z-index: 401;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .customizer-panel.open { transform: translateX(0); }
+
+    .customizer-header {
+        padding: 1.25rem 1.25rem 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .customizer-header h3 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .customizer-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+    }
+    .customizer-close:hover { background: var(--surface2); color: var(--text); }
+
+    .customizer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 1.25rem;
+    }
+    .customizer-body p {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .widget-toggle-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .widget-toggle-item:last-child { border-bottom: none; }
+    .widget-toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.83rem;
+        font-weight: 500;
+        color: var(--text2);
+    }
+    .widget-toggle-label .wt-icon { font-size: 1rem; }
+
+    /* Toggle switch */
+    .toggle-switch {
+        position: relative;
+        width: 38px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+    .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: var(--surface3);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border: 1px solid var(--border2);
+    }
+    .toggle-track::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: var(--muted);
+        border-radius: 50%;
+        transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+    .toggle-switch input:checked + .toggle-track::after {
+        transform: translateX(16px);
+        background: white;
+    }
+
+    /* ── Customize button in topbar-like area ── */
+    .dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    .dashboard-greeting {
+        line-height: 1.3;
+    }
+    .dashboard-greeting .greeting-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .dashboard-greeting .greeting-sub {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+    .btn-customize {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.85rem;
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text2);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-customize:hover {
+        border-color: var(--accent);
+        color: var(--accent2);
+        background: var(--accent-bg);
+    }
+
+    /* ── Widgets grid ── */
+    .widgets-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    /* ── Main row ── */
+    .dashboard-main-row {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1.5rem;
+    }
+
+    /* ── Agenda widget ── */
+    .agenda-scroll {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    /* Appointment cards */
+    .appt-cards-mobile { display: none; }
+    .appt-card {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.65rem;
+    }
+    .appt-card:last-child { margin-bottom: 0; }
+    .appt-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+        gap: 0.5rem;
+    }
+    .appt-card-time { font-size: 1rem; font-weight: 700; color: var(--accent2); }
+    .appt-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem 0.75rem;
+        margin-bottom: 0.65rem;
+    }
+    .appt-card-field-label {
+        font-size: 0.63rem; font-weight: 700; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .appt-card-field-value { font-size: 0.82rem; color: var(--text); margin-top: 1px; }
+    .appt-card-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 0.5rem; padding-top: 0.6rem;
+        border-top: 1px solid var(--border);
+    }
+    .appt-free-slot { background: rgba(34,197,94,0.04); border-color: rgba(34,197,94,0.12); }
+
+    /* ── Sidebar widgets ── */
+    .sidebar-widgets {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* ── Quick Access cards (Catálogo) ── */
+    .quick-access-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    .quick-card {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.1rem 1rem;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: center;
+        transition: all 0.18s ease;
+    }
+    .quick-card:hover {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+    }
+    .quick-card-icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem;
+    }
+    .quick-card-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text2);
+    }
+    .quick-card-count {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    /* ── Widget visibility ── */
+    .widget-section { display: block; }
+    .widget-section.hidden { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+        .dashboard-main-row { grid-template-columns: 1fr; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .quick-access-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+        .appt-table-desktop { display: none !important; }
+        .appt-cards-mobile { display: block !important; }
+        .quick-access-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        .quick-card { padding: 0.75rem 0.5rem; }
+        .dashboard-header { margin-bottom: 1rem; }
+        .greeting-text { font-size: 1rem !important; }
+        .customizer-panel { width: 100%; }
+    }
+    @media (max-width: 400px) {
+        .stats-row { grid-template-columns: 1fr 1fr; }
+        .stat-card .value { font-size: 1.1rem; }
+    }
+</style>
+
+{{-- Customizer Panel Overlay --}}
+<div class="customizer-overlay" id="customizer-overlay" onclick="closeCustomizer()"></div>
+
+{{-- Customizer Panel --}}
+<div class="customizer-panel" id="customizer-panel">
+    <div class="customizer-header">
+        <h3>⚙️ Personalizar Dashboard</h3>
+        <button class="customizer-close" onclick="closeCustomizer()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
     </div>
+    <div class="customizer-body">
+        <p>Activa o desactiva los widgets que querés ver en tu dashboard. Los cambios se guardan automáticamente.</p>
 
-    <div class="stat-card">
-        <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💵</div>
-        <div class="label">Ganancia del día</div>
-        <div class="value">${{ number_format($todayRevenue, 0, ',', '.') }}</div>
-        <div class="sub">Pagos cobrados</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="icon-wrap" style="background:rgba(59,130,246,0.15);">📈</div>
-        <div class="label">Ganancia del mes</div>
-        <div class="value">${{ number_format($monthRevenue, 0, ',', '.') }}</div>
-        <div class="sub">{{ now()->translatedFormat('F Y') }}</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="icon-wrap" style="background:rgba(234,179,8,0.15);">💳</div>
-        <div class="label">Membresías activas</div>
-        <div class="value">{{ $activeMemberships }}</div>
-        <div class="sub">{{ $newClientsMonth }} clientes nuevos este mes</div>
-    </div>
-
-</div>
-
-{{-- ── Fila principal: Turnos de hoy + Métricas ──────────────────────────── --}}
-<div class="grid gap-6" style="grid-template-columns:1fr 340px; margin-bottom:1.5rem;">
-
-    {{-- Turnos de hoy --}}
-    <div class="card" id="turnos">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div class="card-title" style="margin:0;">📅 Turnos de hoy</div>
-            <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-appointment')">+ Nuevo</button>
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">📊</span> Métricas del día
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-stats-day" checked onchange="toggleWidget('widget-stats-day', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
         </div>
 
-        @if($todayAppointments->isEmpty())
-            <div style="text-align:center;padding:2rem;color:var(--muted);">
-                <div style="font-size:2rem;margin-bottom:0.5rem;">📭</div>
-                No hay turnos programados para hoy
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">📈</span> Métricas del mes
             </div>
-        @else
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Cliente</th>
-                        <th>Barbero</th>
-                        <th>Servicio</th>
-                        <th>Pago</th>
-                        <th>Estado</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($todayAppointments as $appt)
-                    <tr>
-                        <td style="font-weight:600;color:var(--accent2);">
-                            {{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}
-                        </td>
-                        <td>
-                            @if($appt->client)
-                                <a href="{{ route('admin.clients.show', $appt->client) }}"
-                                   style="color:var(--text);text-decoration:none;font-weight:500;">
-                                    {{ $appt->client->name }}
-                                </a>
-                            @else
-                                <span style="color:var(--muted);">{{ $appt->customer_name }}</span>
-                            @endif
-                        </td>
-                        <td>{{ $appt->barber->name ?? '—' }}</td>
-                        <td>{{ $appt->service->name ?? '—' }}</td>
-                        <td>
-                            <span class="badge-status {{ $appt->payment_status === 'pagado' ? 'badge-pagado' : 'badge-pendiente-pay' }}">
-                                ${{ number_format($appt->total_price, 0, ',', '.') }}
-                                · {{ $appt->payment_method }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge-status badge-{{ strtolower($appt->status) }}">
-                                {{ $appt->status }}
-                            </span>
-                        </td>
-                        <td>
-                            <form method="POST" action="{{ route('admin.appointment.update', $appt) }}" style="display:inline;">
-                                @csrf
-                                <select name="status" onchange="this.form.submit()" class="form-control" style="padding:0.2rem 0.4rem;font-size:0.7rem;width:auto;">
-                                    @foreach(['Pendiente','Confirmada','Finalizada','Cancelada'] as $st)
-                                        <option value="{{ $st }}" {{ $appt->status == $st ? 'selected' : '' }}>{{ $st }}</option>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-stats-month" checked onchange="toggleWidget('widget-stats-month', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">📅</span> Agenda de hoy
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-agenda" checked onchange="toggleWidget('widget-agenda', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">⚠️</span> Vencimientos próximos
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-expiring" checked onchange="toggleWidget('widget-expiring', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">🏆</span> Barbero del mes
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-top-barber" checked onchange="toggleWidget('widget-top-barber', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">🔥</span> Servicios populares
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-top-services" checked onchange="toggleWidget('widget-top-services', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+
+        <div class="widget-toggle-item">
+            <div class="widget-toggle-label">
+                <span class="wt-icon">⚡</span> Accesos rápidos
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-quick-access" checked onchange="toggleWidget('widget-quick-access', this.checked)">
+                <span class="toggle-track"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+{{-- ── Dashboard Header ── --}}
+<div class="dashboard-header">
+    <div class="dashboard-greeting">
+        <div class="greeting-text">👋 Hola, {{ auth()->user()->name ?? 'Administrador' }}</div>
+        <div class="greeting-sub">{{ now()->translatedFormat('l, d \d\e F Y') }}</div>
+    </div>
+    <button class="btn-customize" onclick="openCustomizer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Personalizar
+    </button>
+</div>
+
+<div class="widgets-grid">
+
+    {{-- ── Widget: Métricas del día ── --}}
+    <div class="widget-section" id="widget-stats-day">
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">📊 Métricas del día · {{ now()->format('d/m/Y') }}</div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(124,106,255,0.15);">📅</div>
+                <div class="label">Turnos hoy</div>
+                <div class="value">{{ $todayCount }}</div>
+                <div class="sub">{{ now()->translatedFormat('l') }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💵</div>
+                <div class="label">Ganancia del día</div>
+                <div class="value">${{ number_format($todayRevenue, 0, ',', '.') }}</div>
+                <div class="sub">Cobrado hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(59,130,246,0.15);">👥</div>
+                <div class="label">Clientes del día</div>
+                <div class="value">{{ $todayAppointments->pluck('customer_name')->merge($todayAppointments->pluck('client.name')->filter())->unique()->count() }}</div>
+                <div class="sub">Atendidos o por atender</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(234,179,8,0.15);">💳</div>
+                <div class="label">Membresías activas</div>
+                <div class="value">{{ $activeMemberships }}</div>
+                <div class="sub">{{ $newClientsMonth }} nuevos este mes</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Widget: Métricas del mes ── --}}
+    <div class="widget-section" id="widget-stats-month">
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">📈 Métricas del mes · {{ now()->translatedFormat('F Y') }}</div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💰</div>
+                <div class="label">Ganancia del mes</div>
+                <div class="value">${{ number_format($monthRevenue, 0, ',', '.') }}</div>
+                <div class="sub">Total cobrado</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(99,102,241,0.15);">🆕</div>
+                <div class="label">Clientes nuevos</div>
+                <div class="value">{{ $newClientsMonth }}</div>
+                <div class="sub">Este mes</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(248,113,113,0.15);">📋</div>
+                <div class="label">Total de turnos</div>
+                <div class="value">{{ $totalTurnos }}</div>
+                <div class="sub">Histórico total</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-wrap" style="background:rgba(251,191,36,0.15);">🏦</div>
+                <div class="label">Caja total</div>
+                <div class="value">${{ number_format($totalCaja, 0, ',', '.') }}</div>
+                <div class="sub">Acumulado histórico</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Widget: Agenda + Panel lateral ── --}}
+    <div class="widget-section" id="widget-agenda">
+        <div class="dashboard-main-row">
+
+            {{-- Agenda de hoy --}}
+            <div class="card" id="turnos">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div class="card-title" style="margin:0;">📅 Turnos de hoy</div>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-appointment')">+ Nuevo turno</button>
+                </div>
+
+                {{-- Desktop table --}}
+                <div class="appt-table-desktop table-responsive agenda-scroll">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Cliente</th>
+                                <th>WhatsApp</th>
+                                <th>Barbero</th>
+                                <th>Servicio</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($agenda as $slot)
+                                @if($slot['appointments']->isEmpty())
+                                    <tr>
+                                        <td style="font-weight:600;color:var(--muted);">{{ $slot['time'] }}</td>
+                                        <td style="color:var(--success);font-weight:500;">Libre</td>
+                                        <td>—</td><td>—</td><td>—</td><td>—</td><td></td>
+                                    </tr>
+                                @else
+                                    @foreach($slot['appointments'] as $appt)
+                                    <tr>
+                                        <td style="font-weight:600;color:var(--accent2);">
+                                            {{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}
+                                        </td>
+                                        <td>
+                                            @if($appt->client)
+                                                <a href="{{ route('admin.clients.show', $appt->client) }}" style="color:var(--text);text-decoration:none;font-weight:500;">{{ $appt->client->name }}</a>
+                                            @else
+                                                <span style="color:var(--muted);">{{ $appt->customer_name }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @php $phone = $appt->client ? $appt->client->phone : $appt->customer_phone; @endphp
+                                            @if($phone)
+                                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $phone) }}" target="_blank" style="color:#25D366;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                                    WA
+                                                </a>
+                                            @else
+                                                <span style="color:var(--muted);font-size:0.8rem;">—</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $appt->barber->name ?? '—' }}</td>
+                                        <td>{{ $appt->service->name ?? '—' }}</td>
+                                        <td>
+                                            <span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span>
+                                        </td>
+                                        <td>
+                                            <form method="POST" action="{{ route('admin.appointment.update', $appt) }}" style="display:inline;">
+                                                @csrf
+                                                <select name="status" onchange="this.form.submit()" class="form-control" style="padding:0.2rem 0.4rem;font-size:0.7rem;width:auto;">
+                                                    @foreach(['Pendiente','Confirmada','Finalizada','Cancelada'] as $st)
+                                                        <option value="{{ $st }}" {{ $appt->status == $st ? 'selected' : '' }}>{{ $st }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </form>
+                                        </td>
+                                    </tr>
                                     @endforeach
-                                </select>
-                            </form>
-                        </td>
-                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Mobile cards --}}
+                <div class="appt-cards-mobile">
+                    @foreach($agenda as $slot)
+                        @if($slot['appointments']->isEmpty())
+                            <div class="appt-card appt-free-slot" style="background:rgba(34,197,94,0.04);border-color:rgba(34,197,94,0.12);">
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="font-weight:700;color:var(--muted);">{{ $slot['time'] }}</span>
+                                    <span style="color:var(--success);font-size:0.8rem;font-weight:500;">✓ Libre</span>
+                                </div>
+                            </div>
+                        @else
+                            @foreach($slot['appointments'] as $appt)
+                            <div class="appt-card">
+                                <div class="appt-card-header">
+                                    <span class="appt-card-time">{{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}</span>
+                                    <span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span>
+                                </div>
+                                <div class="appt-card-body">
+                                    <div><div class="appt-card-field-label">Cliente</div><div class="appt-card-field-value" style="font-weight:600;">
+                                        @if($appt->client)
+                                            <a href="{{ route('admin.clients.show', $appt->client) }}" style="color:var(--text);text-decoration:none;">{{ $appt->client->name }}</a>
+                                        @else {{ $appt->customer_name }} @endif
+                                    </div></div>
+                                    <div><div class="appt-card-field-label">Barbero</div><div class="appt-card-field-value">{{ $appt->barber->name ?? '—' }}</div></div>
+                                    <div><div class="appt-card-field-label">Servicio</div><div class="appt-card-field-value">{{ $appt->service->name ?? '—' }}</div></div>
+                                    @php $phone = $appt->client ? $appt->client->phone : $appt->customer_phone; @endphp
+                                    @if($phone)
+                                    <div><div class="appt-card-field-label">Contacto</div>
+                                        <div class="appt-card-field-value"><a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $phone) }}" target="_blank" style="color:#25D366;font-weight:600;">📱 WA</a></div></div>
+                                    @endif
+                                </div>
+                                <div class="appt-card-footer">
+                                    <form method="POST" action="{{ route('admin.appointment.update', $appt) }}" style="flex:1;">
+                                        @csrf
+                                        <select name="status" onchange="this.form.submit()" class="form-control" style="width:100%;font-size:0.8rem;">
+                                            @foreach(['Pendiente','Confirmada','Finalizada','Cancelada'] as $st)
+                                                <option value="{{ $st }}" {{ $appt->status == $st ? 'selected' : '' }}>{{ $st }}</option>
+                                            @endforeach
+                                        </select>
+                                    </form>
+                                </div>
+                            </div>
+                            @endforeach
+                        @endif
                     @endforeach
-                </tbody>
-            </table>
-        @endif
-    </div>
-
-    {{-- Panel lateral derecho --}}
-    <div style="display:flex;flex-direction:column;gap:1rem;">
-
-        {{-- Vencimientos próximos --}}
-        <div class="card">
-            <div class="card-title">⚠️ Vencimientos en 7 días</div>
-            @if($expiringSoon->isEmpty())
-                <p style="color:var(--muted);font-size:0.8rem;">Sin vencimientos próximos.</p>
-            @else
-                @foreach($expiringSoon as $cm)
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
-                    <div>
-                        <div style="font-size:0.825rem;font-weight:500;">{{ $cm->client->name }}</div>
-                        <div style="font-size:0.7rem;color:var(--muted);">{{ $cm->membership->name }}</div>
-                    </div>
-                    <div style="font-size:0.75rem;color:var(--yellow);font-weight:600;">
-                        {{ $cm->end_date->format('d/m') }}
-                    </div>
                 </div>
-                @endforeach
-            @endif
-        </div>
-
-        {{-- Top barbero del mes --}}
-        @if($topBarber)
-        <div class="card" style="background:linear-gradient(135deg,rgba(124,106,255,0.15),rgba(124,106,255,0.05));">
-            <div class="card-title">🏆 Barbero del mes</div>
-            <div style="font-size:1.1rem;font-weight:700;color:white;">{{ $topBarber->name }}</div>
-            <div style="font-size:0.8rem;color:var(--muted);">{{ $topBarber->month_appointments }} turnos este mes</div>
-        </div>
-        @endif
-
-        {{-- Servicios más vendidos --}}
-        <div class="card">
-            <div class="card-title">🔥 Servicios populares</div>
-            @foreach($topServices as $svc)
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;">
-                <span style="font-size:0.825rem;">{{ $svc->name }}</span>
-                <span style="font-size:0.75rem;font-weight:600;color:var(--accent2);">{{ $svc->month_count }} este mes</span>
             </div>
-            @endforeach
-        </div>
 
-    </div>
-</div>
+            {{-- Panel lateral: Vencimientos + Barbero del mes + Servicios --}}
+            <div class="sidebar-widgets">
+                {{-- Vencimientos --}}
+                <div class="widget-section card" id="widget-expiring">
+                    <div class="card-title">⚠️ Vencimientos en 7 días</div>
+                    @if($expiringSoon->isEmpty())
+                        <p style="color:var(--muted);font-size:0.8rem;">Sin vencimientos próximos.</p>
+                    @else
+                        @foreach($expiringSoon as $cm)
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+                            <div>
+                                <div style="font-size:0.825rem;font-weight:500;">{{ $cm->client->name }}</div>
+                                <div style="font-size:0.7rem;color:var(--muted);">{{ $cm->membership->name }}</div>
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--yellow);font-weight:700;">{{ $cm->end_date->format('d/m') }}</div>
+                        </div>
+                        @endforeach
+                    @endif
+                </div>
 
-{{-- ── Gestión: Barberos, Servicios, Membresías ─────────────────────────── --}}
-<div class="grid grid-cols-3 gap-6" style="margin-bottom:1.5rem;">
-
-    {{-- Barberos --}}
-    <div class="card" id="barberos">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div class="card-title" style="margin:0;">✂️ Barberos</div>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('modal-barber')">+ Agregar</button>
-        </div>
-        @foreach($barbers as $b)
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(46,50,72,0.5);">
-            <div>
-                <div style="font-size:0.825rem;font-weight:500;">{{ $b->name }}</div>
-                @if($b->specialties)
-                    <div style="font-size:0.7rem;color:var(--muted);">{{ implode(', ', $b->specialties) }}</div>
+                {{-- Barbero del mes --}}
+                @if($topBarber)
+                <div class="widget-section card" id="widget-top-barber" style="background:linear-gradient(135deg,rgba(124,106,255,0.18),rgba(124,106,255,0.06));">
+                    <div class="card-title">🏆 Barbero del mes</div>
+                    <div style="font-size:1.15rem;font-weight:700;color:white;">{{ $topBarber->name }}</div>
+                    <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">{{ $topBarber->month_appointments }} turnos este mes</div>
+                </div>
                 @endif
-            </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-                <span class="badge-status" style="{{ $b->is_active ? 'background:rgba(34,197,94,0.1);color:#22c55e' : 'background:rgba(239,68,68,0.1);color:#ef4444' }}">
-                    {{ $b->is_active ? 'Activo' : 'Inactivo' }}
-                </span>
-                <form method="POST" action="{{ route('admin.barber.destroy', $b) }}" onsubmit="return confirm('¿Eliminar?')">
-                    @csrf
-                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                </form>
+
+                {{-- Servicios populares --}}
+                <div class="widget-section card" id="widget-top-services">
+                    <div class="card-title">🔥 Servicios populares</div>
+                    @foreach($topServices as $svc)
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;">
+                        <span style="font-size:0.825rem;">{{ $svc->name }}</span>
+                        <span style="font-size:0.75rem;font-weight:700;color:var(--accent2);">{{ $svc->month_count }} este mes</span>
+                    </div>
+                    @endforeach
+                    @if($topServices->isEmpty())
+                        <p style="color:var(--muted);font-size:0.8rem;">Sin datos este mes.</p>
+                    @endif
+                </div>
             </div>
         </div>
-        @endforeach
     </div>
 
-    {{-- Servicios --}}
-    <div class="card" id="servicios">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div class="card-title" style="margin:0;">📋 Servicios</div>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('modal-service')">+ Agregar</button>
+    {{-- ── Widget: Accesos Rápidos al Catálogo ── --}}
+    <div class="widget-section" id="widget-quick-access">
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">⚡ Accesos rápidos</div>
+        <div class="quick-access-grid">
+            <a href="{{ route('admin.barbers.index') }}" class="quick-card">
+                <div class="quick-card-icon" style="background:rgba(124,106,255,0.15);">✂️</div>
+                <div class="quick-card-count">{{ $barbers->count() }}</div>
+                <div class="quick-card-label">Barberos</div>
+            </a>
+            <a href="{{ route('admin.services.index') }}" class="quick-card">
+                <div class="quick-card-icon" style="background:rgba(34,197,94,0.15);">📋</div>
+                <div class="quick-card-count">{{ $services->count() }}</div>
+                <div class="quick-card-label">Servicios</div>
+            </a>
+            <a href="{{ route('admin.memberships.index') }}" class="quick-card">
+                <div class="quick-card-icon" style="background:rgba(251,191,36,0.15);">💳</div>
+                <div class="quick-card-count">{{ $memberships->count() }}</div>
+                <div class="quick-card-label">Planes</div>
+            </a>
         </div>
-        @foreach($services as $s)
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(46,50,72,0.5);">
-            <div>
-                <div style="font-size:0.825rem;font-weight:500;">{{ $s->name }}</div>
-                <div style="font-size:0.7rem;color:var(--muted);">{{ $s->duration_min }} min</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-                <span style="font-size:0.825rem;font-weight:600;color:var(--green);">${{ number_format($s->price, 0, ',', '.') }}</span>
-                <form method="POST" action="{{ route('admin.service.destroy', $s) }}" onsubmit="return confirm('¿Eliminar?')">
-                    @csrf
-                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                </form>
-            </div>
-        </div>
-        @endforeach
     </div>
 
-    {{-- Membresías --}}
-    <div class="card" id="memberships">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div class="card-title" style="margin:0;">💳 Planes</div>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('modal-membership')">+ Agregar</button>
-        </div>
-        @foreach($memberships as $m)
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(46,50,72,0.5);">
-            <div>
-                <div style="font-size:0.825rem;font-weight:500;">{{ $m->name }}</div>
-                <div style="font-size:0.7rem;color:var(--muted);">{{ $m->visits }} visitas</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-                <span style="font-size:0.825rem;font-weight:600;color:var(--accent2);">${{ number_format($m->price, 0, ',', '.') }}</span>
-                <form method="POST" action="{{ route('admin.membership.destroy', $m) }}" onsubmit="return confirm('¿Eliminar?')">
-                    @csrf
-                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                </form>
-            </div>
-        </div>
-        @endforeach
-    </div>
 </div>
 
-{{-- ── MODALES ───────────────────────────────────────────────────────────── --}}
-
-{{-- Modal: Nuevo Barbero --}}
-<div class="modal-overlay" id="modal-barber">
+{{-- Modal placeholder para nuevo turno --}}
+<div class="modal-overlay" id="modal-new-appointment">
     <div class="modal">
-        <div class="modal-title">✂️ Agregar Barbero</div>
-        <form method="POST" action="{{ route('admin.barber.store') }}">
-            @csrf
-            <div class="form-group">
-                <label class="form-label">Nombre *</label>
-                <input type="text" name="name" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Especialidades (separadas por coma)</label>
-                <input type="text" name="specialties" class="form-control" placeholder="Fade, Corte clásico, Barba">
-            </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
-                <input type="checkbox" name="is_active" id="barber-active" checked style="width:16px;height:16px;">
-                <label for="barber-active" class="form-label" style="margin:0;">Activo</label>
-            </div>
-            <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
-                <button type="button" class="btn btn-ghost" onclick="closeModal('modal-barber')">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- Modal: Nuevo Servicio --}}
-<div class="modal-overlay" id="modal-service">
-    <div class="modal">
-        <div class="modal-title">📋 Agregar Servicio</div>
-        <form method="POST" action="{{ route('admin.service.store') }}">
-            @csrf
-            <div class="form-group">
-                <label class="form-label">Nombre *</label>
-                <input type="text" name="name" class="form-control" required>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group">
-                    <label class="form-label">Categoría *</label>
-                    <select name="category" class="form-control" required>
-                        <option value="corte">Corte</option>
-                        <option value="barba">Barba</option>
-                        <option value="combo">Combo</option>
-                        <option value="otro">Otro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Duración (min) *</label>
-                    <input type="number" name="duration_min" class="form-control" value="30" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Precio *</label>
-                <input type="number" name="price" step="0.01" class="form-control" required>
-            </div>
-            <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
-                <button type="button" class="btn btn-ghost" onclick="closeModal('modal-service')">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- Modal: Nuevo Plan de Membresía --}}
-<div class="modal-overlay" id="modal-membership">
-    <div class="modal">
-        <div class="modal-title">💳 Nuevo Plan de Membresía</div>
-        <form method="POST" action="{{ route('admin.membership.store') }}">
-            @csrf
-            <div class="form-group">
-                <label class="form-label">Nombre del plan *</label>
-                <input type="text" name="name" class="form-control" placeholder="Básica, Media, Pro..." required>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group">
-                    <label class="form-label">Precio mensual *</label>
-                    <input type="number" name="price" step="0.01" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Visitas incluidas *</label>
-                    <input type="text" name="visits" class="form-control" placeholder="4, 8, ilimitadas" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Beneficios</label>
-                <textarea name="benefits" class="form-control" rows="3" placeholder="Descripción del plan..."></textarea>
-            </div>
-            <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
-                <button type="button" class="btn btn-ghost" onclick="closeModal('modal-membership')">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-        </form>
+        <div class="modal-title">📅 Nuevo Turno</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Para crear un turno, usá el sistema de reservas o gestionalo desde la sección de clientes.</p>
+        <div style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeModal('modal-new-appointment')">Cerrar</button>
+        </div>
     </div>
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// ── Widget Customizer ──
+const WIDGETS = [
+    'widget-stats-day',
+    'widget-stats-month',
+    'widget-agenda',
+    'widget-expiring',
+    'widget-top-barber',
+    'widget-top-services',
+    'widget-quick-access'
+];
+
+const TOGGLE_MAP = {
+    'widget-stats-day'     : 'toggle-stats-day',
+    'widget-stats-month'   : 'toggle-stats-month',
+    'widget-agenda'        : 'toggle-agenda',
+    'widget-expiring'      : 'toggle-expiring',
+    'widget-top-barber'    : 'toggle-top-barber',
+    'widget-top-services'  : 'toggle-top-services',
+    'widget-quick-access'  : 'toggle-quick-access',
+};
+
+function loadWidgetPrefs() {
+    const prefs = JSON.parse(localStorage.getItem('barberpro_widgets') || '{}');
+    WIDGETS.forEach(id => {
+        const isVisible = prefs[id] !== false; // default visible
+        const el = document.getElementById(id);
+        const toggleEl = document.getElementById(TOGGLE_MAP[id]);
+        if (el) el.classList.toggle('hidden', !isVisible);
+        if (toggleEl) toggleEl.checked = isVisible;
+    });
+}
+
+function toggleWidget(widgetId, visible) {
+    const el = document.getElementById(widgetId);
+    if (el) el.classList.toggle('hidden', !visible);
+    const prefs = JSON.parse(localStorage.getItem('barberpro_widgets') || '{}');
+    prefs[widgetId] = visible;
+    localStorage.setItem('barberpro_widgets', JSON.stringify(prefs));
+}
+
+function openCustomizer() {
+    document.getElementById('customizer-overlay').classList.add('open');
+    document.getElementById('customizer-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCustomizer() {
+    document.getElementById('customizer-overlay').classList.remove('open');
+    document.getElementById('customizer-panel').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', loadWidgetPrefs);
+</script>
+@endpush

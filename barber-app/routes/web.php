@@ -8,10 +8,15 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ReportController;
 
 // ─── Rutas Públicas (Cliente) ───────────────────────────────────────────────
-Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+Route::get('/', [BookingController::class, 'index'])->name('home');
+Route::get('/booking', [BookingController::class, 'booking'])->name('booking.index');
 Route::get('/api/booking/data', [BookingController::class, 'getData']);
 Route::get('/api/booking/availability', [BookingController::class, 'getAvailability']);
 Route::post('/api/booking/store', [BookingController::class, 'store']);
+Route::post('/api/booking/cancel', [BookingController::class, 'cancel']);
+Route::post('/api/booking/notify-admin', [BookingController::class, 'notifyAdmin']);
+Route::get('/admin/booking/weekly-availability', [BookingController::class, 'getWeeklyAvailability'])->name('admin.booking.weekly-availability');
+Route::post('/admin/booking/toggle-weekly-slot', [BookingController::class, 'toggleWeeklySlot'])->name('admin.booking.toggle-weekly-slot');
 
 // ─── Auth Admin ─────────────────────────────────────────────────────────────
 Route::get('/admin/login', [AdminController::class, 'login'])->name('admin.login');
@@ -20,20 +25,39 @@ Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.log
 
 // ─── Panel Admin ────────────────────────────────────────────────────────────
 Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::post('/admin/push-subscribe', [AdminController::class, 'pushSubscribe'])->name('admin.push-subscribe');
+
+// ─── Panel Barbero ──────────────────────────────────────────────────────────
+Route::get('/barber', [\App\Http\Controllers\BarberDashboardController::class, 'dashboard'])->name('barber.dashboard');
+Route::post('/barber/schedule', [\App\Http\Controllers\BarberDashboardController::class, 'updateSchedule'])->name('barber.schedule.update');
+
+// Apariencia
+Route::get('/admin/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('admin.settings.index');
+Route::post('/admin/settings/update', [\App\Http\Controllers\SettingController::class, 'update'])->name('admin.settings.update');
+Route::post('/admin/settings/gallery', [\App\Http\Controllers\SettingController::class, 'storeGallery'])->name('admin.settings.gallery.store');
+Route::post('/admin/settings/gallery/{id}/delete', [\App\Http\Controllers\SettingController::class, 'destroyGallery'])->name('admin.settings.gallery.destroy');
 
 // Citas
 Route::post('/admin/appointment/{appointment}/status', [AdminController::class, 'updateAppointmentStatus'])->name('admin.appointment.update');
 
 // Barberos
+Route::get('/admin/barbers', [AdminController::class, 'barbers'])->name('admin.barbers.index');
 Route::post('/admin/barber', [AdminController::class, 'storeBarber'])->name('admin.barber.store');
+Route::post('/admin/barber/{barber}/update', [AdminController::class, 'updateBarber'])->name('admin.barber.update');
 Route::post('/admin/barber/{barber}/delete', [AdminController::class, 'destroyBarber'])->name('admin.barber.destroy');
+Route::get('/admin/barber/{barber}/schedule', [AdminController::class, 'barberSchedule'])->name('admin.barber.schedule');
+Route::post('/admin/barber/{barber}/schedule', [AdminController::class, 'updateBarberSchedule'])->name('admin.barber.schedule.update');
 
 // Servicios
+Route::get('/admin/services', [AdminController::class, 'services'])->name('admin.services.index');
 Route::post('/admin/service', [AdminController::class, 'storeService'])->name('admin.service.store');
+Route::post('/admin/service/{service}/update', [AdminController::class, 'updateService'])->name('admin.service.update');
 Route::post('/admin/service/{service}/delete', [AdminController::class, 'destroyService'])->name('admin.service.destroy');
 
 // Membresías (planes)
+Route::get('/admin/memberships', [AdminController::class, 'memberships'])->name('admin.memberships.index');
 Route::post('/admin/membership', [AdminController::class, 'storeMembership'])->name('admin.membership.store');
+Route::post('/admin/membership/{membership}/update', [AdminController::class, 'updateMembership'])->name('admin.membership.update');
 Route::post('/admin/membership/{membership}/delete', [AdminController::class, 'destroyMembership'])->name('admin.membership.destroy');
 
 // ─── Clientes ────────────────────────────────────────────────────────────────

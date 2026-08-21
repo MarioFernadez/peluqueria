@@ -5,9 +5,27 @@
 
 @section('content')
 
+<style>
+    .reports-filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .reports-filter-form > div {
+        flex: 1;
+        min-width: 140px;
+    }
+    @media (max-width: 480px) {
+        .reports-filter-form { flex-direction: column; }
+        .reports-filter-form > div { width: 100%; }
+        .reports-filter-form .btn { width: 100%; justify-content: center; }
+    }
+</style>
+
 {{-- Filtro de período --}}
 <div class="card" style="margin-bottom:1.5rem;">
-    <form method="GET" action="{{ route('admin.reports.index') }}" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+    <form method="GET" action="{{ route('admin.reports.index') }}" class="reports-filter-form">
         <div>
             <label class="form-label">Desde</label>
             <input type="date" name="from" class="form-control" value="{{ $from->format('Y-m-d') }}">
@@ -17,8 +35,8 @@
             <input type="date" name="to" class="form-control" value="{{ $to->format('Y-m-d') }}">
         </div>
         <button type="submit" class="btn btn-primary">Actualizar</button>
-        <span style="align-self:center;color:var(--muted);font-size:0.8rem;">
-            Mostrando: {{ $from->format('d/m/Y') }} — {{ $to->format('d/m/Y') }}
+        <span style="align-self:center;color:var(--muted);font-size:0.8rem;white-space:nowrap;">
+            {{ $from->format('d/m/Y') }} — {{ $to->format('d/m/Y') }}
         </span>
     </form>
 </div>
