@@ -534,83 +534,119 @@
         </div>
     </section>
 
-    <!-- ─── STAFF & SERVICIOS ─── -->
+    <!-- ─── STAFF & SERVICIOS (DINÁMICO) ─── -->
     <section class="section" id="servicios" style="padding-top: 0;">
         <hr class="divider" style="margin-bottom: 3rem;">
+
+        @if(isset($barbers) && $barbers->isNotEmpty())
+        <div x-data="staffSection()" x-init="init()" class="staff-wrapper">
+
+            <!-- Header con título y thumbnails de barberos -->
+            <div class="staff-header">
+                <div>
+                    <span class="section-tag">Equipo</span>
+                    <h2 class="section-title">Staff y servicios</h2>
+                    <p class="section-subtitle">Nuestros expertos están listos para brindarte la mejor experiencia de grooming.</p>
+                </div>
+                <!-- Avatares clickeables -->
+                <div style="display:flex; gap: 4px; flex-wrap: wrap;">
+                    @foreach($barbers as $i => $barber)
+                    <button
+                        @click="selectBarber({{ $i }})"
+                        :class="activeIndex === {{ $i }} ? 'staff-avatar-active' : ''"
+                        class="staff-avatar staff-avatar-btn"
+                        style="margin-left:{{ $i === 0 ? '0' : '-8px' }}; cursor:pointer; border:none; padding:0; background: {{ ['linear-gradient(135deg,#D4A843,#8B6914)', 'linear-gradient(135deg,#6B7280,#374151)', 'linear-gradient(135deg,#7C3AED,#4C1D95)', 'linear-gradient(135deg,#059669,#064E3B)'][$i % 4] }};"
+                        title="{{ $barber->name }}">
+                        @if($barber->photo)
+                            <img src="{{ asset('storage/' . $barber->photo) }}" alt="{{ $barber->name }}"
+                                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        @else
+                            {{ strtoupper(substr($barber->name, 0, 1)) }}
+                        @endif
+                    </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Tabs de barberos -->
+            <div class="staff-services-grid">
+                @foreach($barbers as $i => $barber)
+                <div x-show="activeIndex === {{ $i }}"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem;">
+
+                    <!-- Info del barbero -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                        <div class="staff-avatar" style="width:56px; height:56px; font-size:1.2rem; margin-left:0; flex-shrink:0; overflow:hidden;
+                             background: {{ ['linear-gradient(135deg,#D4A843,#8B6914)', 'linear-gradient(135deg,#6B7280,#374151)', 'linear-gradient(135deg,#7C3AED,#4C1D95)', 'linear-gradient(135deg,#059669,#064E3B)'][$i % 4] }};">
+                            @if($barber->photo)
+                                <img src="{{ asset('storage/' . $barber->photo) }}" alt="{{ $barber->name }}"
+                                     style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            @else
+                                {{ strtoupper(substr($barber->name, 0, 1)) }}
+                            @endif
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary); font-family: 'Outfit', sans-serif;">{{ $barber->name }}</div>
+                            <div style="font-size: 0.78rem; color: var(--gold);">
+                                @if($barber->specialties)
+                                    @php
+                                        $specs = is_array($barber->specialties) ? $barber->specialties : json_decode($barber->specialties, true);
+                                    @endphp
+                                    {{ is_array($specs) ? implode(' · ', array_slice($specs, 0, 3)) : 'Barbero profesional' }}
+                                @else
+                                    Master Barber
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de servicios -->
+                    <div class="service-list">
+                        @if(isset($services) && $services->isNotEmpty())
+                            @foreach($services as $j => $service)
+                            <div class="service-item" @if($loop->last) style="border-bottom: none;" @endif>
+                                <div class="service-info">
+                                    <div class="service-name">{{ $service->name }}</div>
+                                    <div class="service-duration">{{ $service->duration_min }} min</div>
+                                </div>
+                                <div class="service-price">Gs. {{ number_format($service->price, 0, ',', '.') }}</div>
+                            </div>
+                            @endforeach
+                        @else
+                            <div style="text-align:center; color: var(--text-muted); padding: 1rem 0; font-size: 0.85rem;">
+                                Aún no hay servicios cargados.
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Botón reservar -->
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <a href="/booking" class="btn-primary" style="width:100%; justify-content: center;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Reservar con {{ $barber->name }}
+                        </a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        @else
+        <!-- Fallback si no hay barberos cargados -->
         <div class="staff-header">
             <div>
                 <span class="section-tag">Equipo</span>
                 <h2 class="section-title">Staff y servicios</h2>
                 <p class="section-subtitle">Nuestros expertos están listos para brindarte la mejor experiencia de grooming.</p>
             </div>
-            <div style="display:flex; gap: -4px;">
-                <div class="staff-avatar" style="margin-left:0; background: linear-gradient(135deg, #D4A843, #8B6914);" title="Alesoturi">A</div>
-                <div class="staff-avatar" style="background: linear-gradient(135deg, #6B7280, #374151);" title="Marcos">M</div>
-                <div class="staff-avatar" style="background: linear-gradient(135deg, #7C3AED, #4C1D95);" title="Vic">V</div>
-            </div>
         </div>
-
-        <div class="staff-services-grid">
-            <!-- Servicios -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem;">
-                <!-- Barbero -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
-                    <div class="staff-avatar" style="width:48px; height:48px; font-size:1.1rem; margin-left:0; flex-shrink:0;">A</div>
-                    <div>
-                        <div style="font-weight: 700; color: var(--text-primary); font-family: 'Outfit', sans-serif;">Alesoturi</div>
-                        <div style="font-size: 0.78rem; color: var(--gold);">Master Barber</div>
-                    </div>
-                </div>
-
-                <!-- Lista de servicios -->
-                <div class="service-list">
-                    <div class="service-item">
-                        <div class="service-info">
-                            <div class="service-name">Corte + asesoramiento + Lavado</div>
-                            <div class="service-duration">45 min · 50 min</div>
-                        </div>
-                        <div class="service-price">Gs. 70.000</div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <div class="service-name">Corte + Barba + Lavado</div>
-                            <div class="service-duration">60 min · 75 min</div>
-                        </div>
-                        <div class="service-price">Gs. 110.000</div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <div class="service-name">Barba clásica</div>
-                            <div class="service-duration">30 min · 45 min</div>
-                        </div>
-                        <div class="service-price">Gs. 50.000</div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <div class="service-name">Perfilado de cejas</div>
-                            <div class="service-duration">10 min</div>
-                        </div>
-                        <div class="service-price">Gs. 20.000</div>
-                    </div>
-                    <div class="service-item" style="border-bottom: none;">
-                        <div class="service-info">
-                            <div class="service-name">Corte niños (hasta 12 años)</div>
-                            <div class="service-duration">30 min</div>
-                        </div>
-                        <div class="service-price">Gs. 45.000</div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                    <a href="/booking" class="btn-primary" style="width:100%; justify-content: center;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Reservar turno
-                    </a>
-                </div>
-            </div>
-
-
+        <div style="text-align:center; padding: 3rem; color: var(--text-muted);">
+            Próximamente conocé a nuestro equipo.
         </div>
+        @endif
     </section>
 
     <!-- ─── UBICACIÓN ─── -->
@@ -832,7 +868,35 @@
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(el);
         });
+        // ── Staff section tabs (barberos) ──
+        function staffSection() {
+            return {
+                activeIndex: 0,
+                init() { this.activeIndex = 0; },
+                selectBarber(index) {
+                    this.activeIndex = index;
+                }
+            };
+        }
     </script>
+    <style>
+        .staff-avatar-btn {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, z-index 0s;
+            position: relative;
+            z-index: 1;
+        }
+        .staff-avatar-btn:hover {
+            transform: scale(1.12) translateY(-2px);
+            z-index: 5;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+        }
+        .staff-avatar-active {
+            transform: scale(1.15) translateY(-3px) !important;
+            z-index: 10 !important;
+            box-shadow: 0 0 0 3px var(--gold), 0 6px 20px rgba(212,168,67,0.4) !important;
+        }
+        .staff-wrapper { width: 100%; }
+    </style>
     <style>
         @keyframes whatsapp-pulse {
             0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,0.5); }
