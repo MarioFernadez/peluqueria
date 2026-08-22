@@ -942,7 +942,12 @@
                     setTimeout(() => this.nextStep(), 180);
                 },
 
-                nextStep() { if (this.step < 5) this.step++; },
+                nextStep() { 
+                    if (this.step === 1 && !this.selectedBarberId) return;
+                    if (this.step === 2 && !this.selectedServiceId) return;
+                    if (this.step === 3 && (!this.selectedDate || !this.selectedTime)) return;
+                    if (this.step < 5) this.step++; 
+                },
                 prevStep() { if (this.step > 1) this.step--; },
 
                 getBarberName() { const b = this.barbers.find(x => x.id === this.selectedBarberId); return b ? b.name : ''; },

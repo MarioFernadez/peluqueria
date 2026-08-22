@@ -286,7 +286,6 @@ class AdminController extends Controller
             'category' => 'required|string',
             'price' => 'required|numeric',
             'duration_min' => 'required|integer',
-            'is_active' => 'boolean'
         ]);
         $validated['is_active'] = $request->has('is_active');
         Service::create($validated);
@@ -323,7 +322,6 @@ class AdminController extends Controller
             'price' => 'required|numeric',
             'visits' => 'required|string',
             'benefits' => 'nullable|string',
-            'is_active' => 'boolean'
         ]);
         $validated['is_active'] = $request->has('is_active');
         Membership::create($validated);
