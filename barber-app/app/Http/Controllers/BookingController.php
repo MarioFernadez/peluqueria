@@ -24,7 +24,7 @@ class BookingController extends Controller
         $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
         $waNumber = $settings['whatsapp_number'] ?? '595000000000';
         $businessName = $settings['hero_title'] ?? 'Athenea Barber';
-        return view('booking', compact('waNumber', 'businessName'));
+        return view('booking', compact('waNumber', 'businessName', 'settings'));
     }
 
     public function getData()
@@ -33,11 +33,13 @@ class BookingController extends Controller
         $services = Service::where('is_active', true)->get();
         $memberships = \App\Models\Membership::where('is_active', true)->get();
 
+        $businessName = \App\Models\Setting::where('key', 'hero_title')->value('value') ?? 'Athenea Barber';
+
         return response()->json([
             'barbers'     => $barbers,
             'services'    => $services,
             'memberships' => $memberships,
-            'business'    => ['name' => 'Athenea Barber', 'assistant_name' => 'Barbi'],
+            'business'    => ['name' => $businessName, 'assistant_name' => 'Barbi'],
         ]);
     }
 
@@ -207,8 +209,8 @@ class BookingController extends Controller
     }
 
     /**
-     * Cancela un turno. Solo funciona si está Pendiente o Confirmado.
-     * El frontend verifica ownership via localStorage (appointment_id guardado al reservar).
+     * Cancela un turno. Solo funciona si está Pendiente o Confirmado
+     * y si faltan más de 5 minutos para la hora del turno.
      */
     public function cancel(Request $request)
     {
@@ -225,9 +227,22 @@ class BookingController extends Controller
             ], 422);
         }
 
+        // Verificar que falten más de 5 minutos para el turno
+        $appointmentDatetime = \Carbon\Carbon::parse(
+            $appointment->appointment_date . ' ' . $appointment->appointment_time
+        );
+        $minutesUntilAppointment = now()->diffInMinutes($appointmentDatetime, false);
+
+        if ($minutesUntilAppointment < 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No es posible cancelar el turno: debe hacerse con al menos 5 minutos de anticipación.',
+            ], 422);
+        }
+
         $appointment->update(['status' => 'Cancelado']);
 
-        return response()->json(['success' => true, 'message' => 'Turno cancelado con exito.']);
+        return response()->json(['success' => true, 'message' => 'Turno cancelado correctamente.']);
     }
 
     public function notifyAdmin(Request $request)

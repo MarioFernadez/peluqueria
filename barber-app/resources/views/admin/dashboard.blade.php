@@ -313,7 +313,7 @@
 {{-- Customizer Panel --}}
 <div class="customizer-panel" id="customizer-panel">
     <div class="customizer-header">
-        <h3>⚙️ Personalizar Dashboard</h3>
+        <h3>Personalizar Dashboard</h3>
         <button class="customizer-close" onclick="closeCustomizer()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -325,7 +325,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">📊</span> Métricas del día
+                Métricas del día
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-stats-day" checked onchange="toggleWidget('widget-stats-day', this.checked)">
@@ -335,7 +335,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">📈</span> Métricas del mes
+                Métricas del mes
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-stats-month" checked onchange="toggleWidget('widget-stats-month', this.checked)">
@@ -345,7 +345,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">📅</span> Agenda de hoy
+                Agenda de hoy
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-agenda" checked onchange="toggleWidget('widget-agenda', this.checked)">
@@ -355,7 +355,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">⚠️</span> Vencimientos próximos
+                Vencimientos próximos
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-expiring" checked onchange="toggleWidget('widget-expiring', this.checked)">
@@ -365,7 +365,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">🏆</span> Barbero del mes
+                Barbero del mes
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-top-barber" checked onchange="toggleWidget('widget-top-barber', this.checked)">
@@ -375,7 +375,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">🔥</span> Servicios populares
+                Servicios populares
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-top-services" checked onchange="toggleWidget('widget-top-services', this.checked)">
@@ -385,7 +385,7 @@
 
         <div class="widget-toggle-item">
             <div class="widget-toggle-label">
-                <span class="wt-icon">⚡</span> Accesos rápidos
+                Accesos rápidos
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggle-quick-access" checked onchange="toggleWidget('widget-quick-access', this.checked)">
@@ -398,7 +398,7 @@
 {{-- ── Dashboard Header ── --}}
 <div class="dashboard-header">
     <div class="dashboard-greeting">
-        <div class="greeting-text">👋 Hola, {{ auth()->user()->name ?? 'Administrador' }}</div>
+        <div class="greeting-text">Hola, {{ auth()->user()->name ?? 'Administrador' }}</div>
         <div class="greeting-sub">{{ now()->translatedFormat('l, d \d\e F Y') }}</div>
     </div>
     <button class="btn-customize" onclick="openCustomizer()">
@@ -414,28 +414,36 @@
 
     {{-- ── Widget: Métricas del día ── --}}
     <div class="widget-section" id="widget-stats-day">
-        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">📊 Métricas del día · {{ now()->format('d/m/Y') }}</div>
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">Métricas del día · {{ now()->format('d/m/Y') }}</div>
         <div class="stats-row">
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(124,106,255,0.15);">📅</div>
+                <div class="icon-wrap" style="background:rgba(124,106,255,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <div class="label">Turnos hoy</div>
                 <div class="value">{{ $todayCount }}</div>
                 <div class="sub">{{ now()->translatedFormat('l') }}</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💵</div>
+                <div class="icon-wrap" style="background:rgba(34,197,94,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
                 <div class="label">Ganancia del día</div>
                 <div class="value">${{ number_format($todayRevenue, 0, ',', '.') }}</div>
                 <div class="sub">Cobrado hoy</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(59,130,246,0.15);">👥</div>
+                <div class="icon-wrap" style="background:rgba(59,130,246,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
                 <div class="label">Clientes del día</div>
                 <div class="value">{{ $todayAppointments->pluck('customer_name')->merge($todayAppointments->pluck('client.name')->filter())->unique()->count() }}</div>
                 <div class="sub">Atendidos o por atender</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(234,179,8,0.15);">💳</div>
+                <div class="icon-wrap" style="background:rgba(234,179,8,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
                 <div class="label">Membresías activas</div>
                 <div class="value">{{ $activeMemberships }}</div>
                 <div class="sub">{{ $newClientsMonth }} nuevos este mes</div>
@@ -445,28 +453,36 @@
 
     {{-- ── Widget: Métricas del mes ── --}}
     <div class="widget-section" id="widget-stats-month">
-        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">📈 Métricas del mes · {{ now()->translatedFormat('F Y') }}</div>
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">Métricas del mes · {{ now()->translatedFormat('F Y') }}</div>
         <div class="stats-row">
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(34,197,94,0.15);">💰</div>
+                <div class="icon-wrap" style="background:rgba(34,197,94,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                </div>
                 <div class="label">Ganancia del mes</div>
                 <div class="value">${{ number_format($monthRevenue, 0, ',', '.') }}</div>
                 <div class="sub">Total cobrado</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(99,102,241,0.15);">🆕</div>
+                <div class="icon-wrap" style="background:rgba(99,102,241,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                </div>
                 <div class="label">Clientes nuevos</div>
                 <div class="value">{{ $newClientsMonth }}</div>
                 <div class="sub">Este mes</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(248,113,113,0.15);">📋</div>
+                <div class="icon-wrap" style="background:rgba(248,113,113,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
                 <div class="label">Total de turnos</div>
                 <div class="value">{{ $totalTurnos }}</div>
                 <div class="sub">Histórico total</div>
             </div>
             <div class="stat-card">
-                <div class="icon-wrap" style="background:rgba(251,191,36,0.15);">🏦</div>
+                <div class="icon-wrap" style="background:rgba(251,191,36,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
                 <div class="label">Caja total</div>
                 <div class="value">${{ number_format($totalCaja, 0, ',', '.') }}</div>
                 <div class="sub">Acumulado histórico</div>
@@ -481,7 +497,7 @@
             {{-- Agenda de hoy --}}
             <div class="card" id="turnos">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                    <div class="card-title" style="margin:0;">📅 Turnos de hoy</div>
+                    <div class="card-title" style="margin:0;">Turnos de hoy</div>
                     <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-appointment')">+ Nuevo turno</button>
                 </div>
 
@@ -606,7 +622,7 @@
             <div class="sidebar-widgets">
                 {{-- Vencimientos --}}
                 <div class="widget-section card" id="widget-expiring">
-                    <div class="card-title">⚠️ Vencimientos en 7 días</div>
+                    <div class="card-title">Vencimientos en 7 días</div>
                     @if($expiringSoon->isEmpty())
                         <p style="color:var(--muted);font-size:0.8rem;">Sin vencimientos próximos.</p>
                     @else
@@ -624,8 +640,8 @@
 
                 {{-- Barbero del mes --}}
                 @if($topBarber)
-                <div class="widget-section card" id="widget-top-barber" style="background:linear-gradient(135deg,rgba(124,106,255,0.18),rgba(124,106,255,0.06));">
-                    <div class="card-title">🏆 Barbero del mes</div>
+                <div class="widget-section card" id="widget-top-barber" style="background:rgba(124,106,255,0.06); border-color: rgba(124,106,255,0.15);">
+                    <div class="card-title">Barbero del mes</div>
                     <div style="font-size:1.15rem;font-weight:700;color:white;">{{ $topBarber->name }}</div>
                     <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">{{ $topBarber->month_appointments }} turnos este mes</div>
                 </div>
@@ -633,7 +649,7 @@
 
                 {{-- Servicios populares --}}
                 <div class="widget-section card" id="widget-top-services">
-                    <div class="card-title">🔥 Servicios populares</div>
+                    <div class="card-title">Servicios populares</div>
                     @foreach($topServices as $svc)
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;">
                         <span style="font-size:0.825rem;">{{ $svc->name }}</span>
@@ -650,20 +666,26 @@
 
     {{-- ── Widget: Accesos Rápidos al Catálogo ── --}}
     <div class="widget-section" id="widget-quick-access">
-        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">⚡ Accesos rápidos</div>
+        <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.65rem;">Accesos rápidos</div>
         <div class="quick-access-grid">
             <a href="{{ route('admin.barbers.index') }}" class="quick-card">
-                <div class="quick-card-icon" style="background:rgba(124,106,255,0.15);">✂️</div>
+                <div class="quick-card-icon" style="background:rgba(124,106,255,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                </div>
                 <div class="quick-card-count">{{ $barbers->count() }}</div>
                 <div class="quick-card-label">Barberos</div>
             </a>
             <a href="{{ route('admin.services.index') }}" class="quick-card">
-                <div class="quick-card-icon" style="background:rgba(34,197,94,0.15);">📋</div>
+                <div class="quick-card-icon" style="background:rgba(34,197,94,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
                 <div class="quick-card-count">{{ $services->count() }}</div>
                 <div class="quick-card-label">Servicios</div>
             </a>
             <a href="{{ route('admin.memberships.index') }}" class="quick-card">
-                <div class="quick-card-icon" style="background:rgba(251,191,36,0.15);">💳</div>
+                <div class="quick-card-icon" style="background:rgba(251,191,36,0.12);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
                 <div class="quick-card-count">{{ $memberships->count() }}</div>
                 <div class="quick-card-label">Planes</div>
             </a>
@@ -675,7 +697,7 @@
 {{-- Modal placeholder para nuevo turno --}}
 <div class="modal-overlay" id="modal-new-appointment">
     <div class="modal">
-        <div class="modal-title">📅 Nuevo Turno</div>
+        <div class="modal-title">Nuevo Turno</div>
         <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Para crear un turno, usá el sistema de reservas o gestionalo desde la sección de clientes.</p>
         <div style="display:flex;justify-content:flex-end;">
             <button class="btn btn-ghost" onclick="closeModal('modal-new-appointment')">Cerrar</button>

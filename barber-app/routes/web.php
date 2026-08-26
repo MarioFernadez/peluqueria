@@ -38,6 +38,7 @@ Route::post('/admin/settings/gallery', [\App\Http\Controllers\SettingController:
 Route::post('/admin/settings/gallery/{id}/delete', [\App\Http\Controllers\SettingController::class, 'destroyGallery'])->name('admin.settings.gallery.destroy');
 
 // Citas
+Route::get('/admin/appointments', [AdminController::class, 'appointments'])->name('admin.appointments.index');
 Route::post('/admin/appointment/{appointment}/status', [AdminController::class, 'updateAppointmentStatus'])->name('admin.appointment.update');
 
 // Barberos

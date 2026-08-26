@@ -59,9 +59,10 @@ class AdminController extends Controller
 
         $today = now()->toDateString();
 
-        // Citas de hoy
+        // Citas de hoy (excluyendo cancelados para que aparezcan como Libre)
         $todayAppointments = Appointment::with(['barber', 'service', 'client'])
             ->whereDate('appointment_date', $today)
+            ->whereNotIn('status', ['Cancelado', 'Cancelada'])
             ->orderBy('appointment_time')
             ->get();
 
@@ -139,6 +140,30 @@ class AdminController extends Controller
         if (!Auth::check()) return redirect()->route('admin.login');
         $barbers = Barber::all();
         return view('admin.barbers.index', compact('barbers'));
+    }
+
+    public function appointments(Request $request)
+    {
+        if (!Auth::check()) return redirect()->route('admin.login');
+        
+        $query = Appointment::with(['barber', 'service', 'client'])
+            ->orderBy('appointment_date', 'asc')
+            ->orderBy('appointment_time', 'asc');
+        
+        if ($request->has('date') && !empty($request->date)) {
+            $query->whereDate('appointment_date', $request->date);
+        } else {
+            // Si no hay fecha específica, mostrar solo de hoy en adelante
+            $query->whereDate('appointment_date', '>=', now()->toDateString());
+        }
+        
+        if ($request->has('barber_id') && !empty($request->barber_id)) {
+            $query->where('barber_id', $request->barber_id);
+        }
+
+        $barbers = \App\Models\Barber::all();
+        $appointments = $query->paginate(20);
+        return view('admin.appointments', compact('appointments', 'barbers'));
     }
 
     public function barberSchedule(Barber $barber)
@@ -222,8 +247,8 @@ class AdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/images/barbers');
-            $validated['image_path'] = str_replace('public/', 'storage/', $path);
+            $path = $request->file('image')->store('images/barbers', 'public');
+            $validated['image_path'] = 'storage/' . $path;
         }
         
         $password = Str::random(8);
@@ -262,8 +287,8 @@ class AdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/images/barbers');
-            $validated['image_path'] = str_replace('public/', 'storage/', $path);
+            $path = $request->file('image')->store('images/barbers', 'public');
+            $validated['image_path'] = 'storage/' . $path;
         }
         
         $barber->update($validated);

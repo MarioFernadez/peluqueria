@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Athenea Barber — Barbería premium en Encarnación, Paraguay. Reservá tu turno online y disfruta de los mejores servicios de grooming.">
-    <title>Athenea Barber — Barbería Premium en Encarnación</title>
+    <meta name="description" content="{{ $settings['hero_title'] ?? 'Athenea Barber' }} — Barbería premium en Encarnación, Paraguay. Reservá tu turno online y disfruta de los mejores servicios de grooming.">
+    <title>{{ $settings['hero_title'] ?? 'Athenea Barber' }} — Barbería Premium</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,6 +93,7 @@
             width: 36px; height: 36px; border-radius: 9px;
             background: linear-gradient(135deg, var(--gold), var(--gold-dark));
             display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
         .nav-logo-text { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-secondary); }
         [data-theme="dark"] .nav-logo-text { color: #fff; }
@@ -137,18 +138,19 @@
         }
         .hero-bg {
             position: absolute; inset: 0;
-            background-image: url('{{ isset($settings["hero_bg_image"]) ? asset($settings["hero_bg_image"]) : "/images/hero_bg.png" }}');
+            background-image: url('{{ isset($settings["hero_bg_image"]) ? asset($settings["hero_bg_image"]) : "" }}');
             background-size: cover; background-position: center;
             filter: brightness(0.45);
             z-index: 0;
+            background-color: #0d0d0d;
         }
         .hero-gradient {
             position: absolute; inset: 0; z-index: 1;
             background: linear-gradient(
                 to bottom,
-                rgba(10,10,10,0.2) 0%,
-                rgba(10,10,10,0.1) 40%,
-                rgba(10,10,10,0.85) 80%,
+                rgba(10,10,10,0.15) 0%,
+                rgba(10,10,10,0.05) 40%,
+                rgba(10,10,10,0.88) 80%,
                 rgba(10,10,10,1) 100%
             );
         }
@@ -172,6 +174,7 @@
             background: linear-gradient(135deg, var(--gold), #8B6914);
             display: flex; align-items: center; justify-content: center;
             font-size: 2rem;
+            overflow: hidden;
         }
         .hero-title { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; line-height: 1.1; color: #ffffff; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
         .hero-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -410,16 +413,20 @@
     <!-- ─── NAVBAR ─── -->
     <nav class="navbar" :class="{ 'scrolled': scrolled }">
         <a href="/" class="nav-logo">
-            <div class="nav-logo-icon">
-                <!-- Scissors icon -->
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-                    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-                    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-                </svg>
+            <div class="nav-logo-icon" {!! isset($settings['logo_image']) ? 'style="background: transparent;"' : '' !!}>
+                @if(isset($settings['logo_image']))
+                    <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;">
+                @else
+                    <!-- Scissors icon -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                        <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                        <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                        <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                    </svg>
+                @endif
             </div>
-            <span class="nav-logo-text">Athenea Barber</span>
+            <span class="nav-logo-text">{{ $settings['hero_title'] ?? 'Athenea Barber' }}</span>
         </a>
 
         <ul class="nav-links">
@@ -443,13 +450,7 @@
                     <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                 </svg>
             </button>
-            <a href="/admin/login" class="btn-login">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                    <polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-                Iniciar sesión
-            </a>
+
             <!-- Hamburger mobile -->
             <button class="hamburger-btn" onclick="openMobileMenu()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -469,23 +470,23 @@
             </div>
 
             <div class="hero-profile fade-in-up delay-2">
-                <div class="hero-avatar">
-                    <!-- Barber pole / formal icon -->
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(212,168,67,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-                        <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-                        <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                        <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-                    </svg>
+                <div class="hero-avatar" {!! isset($settings['logo_image']) ? 'style="background: transparent; border-color: rgba(255,255,255,0.1);"' : '' !!}>
+                    @if(isset($settings['logo_image']))
+                        <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                    @else
+                        <!-- Barber pole / formal icon -->
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(212,168,67,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                        </svg>
+                    @endif
                 </div>
                 <div>
                     <h1 class="hero-title">{{ $settings['hero_title'] ?? 'Athenea Barber' }}</h1>
                     <div class="hero-subtitle">
                         <span>{{ $settings['hero_subtitle'] ?? 'Encarnación, Paraguay' }}</span>
-                        <span class="hero-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                            5.0 — Excelente
-                        </span>
                     </div>
                 </div>
             </div>
@@ -503,36 +504,32 @@
         </div>
     </section>
 
-    <!-- ─── GALERÍA ─── -->
+    {{-- ─── GALERÍA ─── --}}
+    @if(isset($galleryWorks) && $galleryWorks->isNotEmpty())
     <section class="section" id="galeria">
         <hr class="divider" style="margin-bottom: 3rem;">
         <div>
             <span class="section-tag">Galería</span>
             <h2 class="section-title">Nuestros trabajos</h2>
-            <p class="section-subtitle">Nuestros expertos están listos para brindarte la mejor experiencia de grooming.</p>
+            <p class="section-subtitle">El resultado habla por sí solo.</p>
         </div>
 
         <div class="gallery-grid">
-            @if(isset($galleryWorks) && $galleryWorks->isNotEmpty())
-                @foreach($galleryWorks as $index => $work)
-                    <div class="gallery-card fade-in-up delay-{{ min($index + 1, 4) }}">
-                        @if($work->badge)
-                            <span class="gallery-card-badge">{{ $work->badge }}</span>
-                        @endif
-                        <img src="{{ asset($work->image_path) }}" alt="{{ $work->title }}" loading="lazy">
-                        <div class="gallery-card-overlay">
-                            <div class="gallery-card-title">{{ $work->title }}</div>
-                            <div class="gallery-card-sub">{{ $work->subtitle }}</div>
-                        </div>
+            @foreach($galleryWorks as $index => $work)
+                <div class="gallery-card fade-in-up delay-{{ min($index + 1, 4) }}">
+                    @if($work->badge)
+                        <span class="gallery-card-badge">{{ $work->badge }}</span>
+                    @endif
+                    <img src="{{ asset($work->image_path) }}" alt="{{ $work->title }}" loading="lazy">
+                    <div class="gallery-card-overlay">
+                        <div class="gallery-card-title">{{ $work->title }}</div>
+                        <div class="gallery-card-sub">{{ $work->subtitle }}</div>
                     </div>
-                @endforeach
-            @else
-                <div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 2rem;">
-                    Aún no hay trabajos en la galería.
                 </div>
-            @endif
+            @endforeach
         </div>
     </section>
+    @endif
 
     <!-- ─── STAFF & SERVICIOS (DINÁMICO) ─── -->
     <section class="section" id="servicios" style="padding-top: 0;">
@@ -694,7 +691,7 @@
                     src="{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28916.35!2d-55.8456!3d-27.3364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945cfeb6a68f6f85%3A0x8b96b94d79d5869c!2sEncarnaci%C3%B3n%2C%20Paraguay!5e0!3m2!1ses!2sar!4v1' }}"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
-                    title="Mapa de Athenea Barber"
+                    title="Mapa de {{ $settings['hero_title'] ?? 'Athenea Barber' }}"
                 ></iframe>
             </div>
         </div>
@@ -733,15 +730,19 @@
             <!-- Brand -->
             <div class="footer-brand">
                 <div class="footer-logo">
-                    <div class="nav-logo-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-                            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-                            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-                        </svg>
+                    <div class="nav-logo-icon" {!! isset($settings['logo_image']) ? 'style="background: transparent;"' : '' !!}>
+                        @if(isset($settings['logo_image']))
+                            <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;">
+                        @else
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                            </svg>
+                        @endif
                     </div>
-                    <span style="font-family: 'Outfit'; font-weight: 700; font-size: 1rem; color: var(--text-primary);">Athenea Barber</span>
+                    <span style="font-family: 'Outfit'; font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ $settings['hero_title'] ?? 'Athenea Barber' }}</span>
                 </div>
                 <p class="footer-desc">Elevamos el estándar del grooming masculino con precisión, producto y estilo artesanal.</p>
                 <div class="social-links">
@@ -784,17 +785,21 @@
         </div>
 
         <div class="footer-bottom">
-            <span class="footer-copy">© 2024 Athenea Barber. All rights reserved.</span>
+            <span class="footer-copy">© 2024 {{ $settings['hero_title'] ?? 'Athenea Barber' }}. All rights reserved.</span>
             <div class="footer-logo">
-                <div class="nav-logo-icon" style="width:28px; height:28px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-                            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-                            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-                            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-                        </svg>
+                    <div class="nav-logo-icon" style="width:28px; height:28px; {!! isset($settings['logo_image']) ? 'background: transparent;' : '' !!}">
+                        @if(isset($settings['logo_image']))
+                            <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;">
+                        @else
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                            </svg>
+                        @endif
                     </div>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Athenea Barber</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">{{ $settings['hero_title'] ?? 'Athenea Barber' }}</span>
             </div>
         </div>
     </footer>

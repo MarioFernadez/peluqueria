@@ -45,6 +45,15 @@
                 <input type="text" name="hero_address_badge" class="form-control" value="{{ $settings['hero_address_badge'] ?? '14 de enero calle Gral. Artigas y Juan L. Mallorquín' }}">
             </div>
             <div class="form-group">
+                <label class="form-label">Logo de la Barbería</label>
+                @if(isset($settings['logo_image']))
+                    <div style="margin-bottom: 0.5rem; background: var(--bg-card); padding: 0.5rem; display: inline-block; border-radius: 8px; border: 1px solid var(--border);">
+                        <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="height: 40px; object-fit: contain;">
+                    </div>
+                @endif
+                <input type="file" name="logo_image" class="form-control" accept="image/*">
+            </div>
+            <div class="form-group">
                 <label class="form-label">Imagen de fondo</label>
                 @if(isset($settings['hero_bg_image']))
                     <div style="margin-bottom: 0.5rem;">

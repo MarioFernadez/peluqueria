@@ -17,15 +17,20 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->except(['_token', 'hero_bg_image']);
+        $data = $request->except(['_token', 'hero_bg_image', 'logo_image']);
 
         foreach ($data as $key => $value) {
             Setting::set($key, $value);
         }
 
         if ($request->hasFile('hero_bg_image')) {
-            $path = $request->file('hero_bg_image')->store('public/images');
-            Setting::set('hero_bg_image', str_replace('public/', 'storage/', $path));
+            $path = $request->file('hero_bg_image')->store('images', 'public');
+            Setting::set('hero_bg_image', 'storage/' . $path);
+        }
+
+        if ($request->hasFile('logo_image')) {
+            $path = $request->file('logo_image')->store('images', 'public');
+            Setting::set('logo_image', 'storage/' . $path);
         }
 
         return redirect()->back()->with('success', 'Configuración actualizada correctamente.');
@@ -38,8 +43,8 @@ class SettingController extends Controller
             'image' => 'required|image|max:2048',
         ]);
 
-        $path = $request->file('image')->store('public/images/gallery');
-        $imagePath = str_replace('public/', 'storage/', $path);
+        $path = $request->file('image')->store('images/gallery', 'public');
+        $imagePath = 'storage/' . $path;
 
         GalleryWork::create([
             'title' => $request->title,

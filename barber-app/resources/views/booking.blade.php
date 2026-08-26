@@ -52,11 +52,13 @@
         }
         .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; flex-shrink: 0; }
         .nav-logo-icon {
-            width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+            width: 36px; height: 36px; border-radius: 9px;
             background: linear-gradient(135deg, var(--gold), var(--gold-dark));
             display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 14px; color: #000; font-family: 'Outfit', sans-serif;
+            font-weight: 700; color: #111; font-size: 14px;
+            overflow: hidden;
         }
+        .nav-logo-icon img { width: 100%; height: 100%; object-fit: cover; }
         .nav-logo-text { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); white-space: nowrap; }
         .nav-actions { display: flex; align-items: center; gap: 0.5rem; }
         .nav-login {
@@ -392,7 +394,13 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <a href="/" class="nav-logo">
-            <div class="nav-logo-icon">A</div>
+            <div class="nav-logo-icon" {!! isset($settings['logo_image']) ? 'style="background: transparent;"' : '' !!}>
+                @if(isset($settings['logo_image']))
+                    <img src="{{ asset($settings['logo_image']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;">
+                @else
+                    A
+                @endif
+            </div>
             <span class="nav-logo-text">{{ $businessName }}</span>
         </a>
         <div class="nav-actions">
@@ -608,7 +616,7 @@
                     <div class="confirm-card">
                         <div class="c-row">
                             <span class="c-key">Barbería</span>
-                            <span class="c-val">Athenea Barber</span>
+                            <span class="c-val">{{ $businessName }}</span>
                         </div>
                         <div class="c-row">
                             <span class="c-key">Barbero</span>
@@ -636,6 +644,17 @@
                             <span class="c-total-key">Total</span>
                             <span class="c-total-val" x-text="'Gs. '+Number(totalPrice).toLocaleString('es-PY')"></span>
                         </div>
+                    </div>
+                    
+                    <!-- Política de Cancelación -->
+                    <div style="background:rgba(212,168,67,0.08); border:1px solid rgba(212,168,67,0.3); border-radius:12px; padding:1rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                            <span style="font-size:1.2rem;">⚠️</span>
+                            <span style="font-weight:700; font-size:0.85rem; color:var(--gold-dark);">Política de cancelación</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text); line-height:1.5; margin:0;">
+                            Si necesitás cancelar tu turno, tenés tiempo hasta <strong>5 minutos antes</strong> de la hora reservada. Pasado ese tiempo, el turno ya no se podrá cancelar a través del sistema.
+                        </p>
                     </div>
 
                     <!-- Nombre -->
@@ -706,7 +725,7 @@
                 <div style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:0.75rem;">
                     <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
                         <span style="color:var(--muted);">Barbería</span>
-                        <span style="font-weight:600;">Athenea Barber</span>
+                        <span style="font-weight:600;">{{ $businessName }}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
                         <span style="color:var(--muted);">Barbero</span>
