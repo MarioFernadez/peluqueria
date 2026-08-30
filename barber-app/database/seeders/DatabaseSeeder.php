@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Administrador
         \App\Models\User::create([
             'name' => 'Administrador',
-            'email' => 'admin@peluqueria.com',
+            'email' => 'admin@barberia.com',
             'password' => \Illuminate\Support\Facades\Hash::make('PASSWORD2026'),
             'role' => 'admin', // Asumiendo que existe un rol
         ]);
