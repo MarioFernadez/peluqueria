@@ -16,10 +16,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Administrador
-        \App\Models\User::factory()->create([
+        \App\Models\User::create([
             'name' => 'Administrador',
             'email' => 'admin@peluqueria.com',
             'password' => \Illuminate\Support\Facades\Hash::make('PASSWORD2026'),
+            'role' => 'admin', // Asumiendo que existe un rol
         ]);
         // Barberos
         \App\Models\Barber::create([
