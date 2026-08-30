@@ -166,6 +166,15 @@ class AdminController extends Controller
         return view('admin.appointments', compact('appointments', 'barbers'));
     }
 
+    public function destroyAppointment(Appointment $appointment)
+    {
+        if (!Auth::check()) return redirect()->route('admin.login');
+        
+        $appointment->delete();
+        
+        return redirect()->back()->with('success', 'Turno eliminado correctamente.');
+    }
+
     public function barberSchedule(Barber $barber)
     {
         if (!Auth::check()) return redirect()->route('admin.login');
@@ -223,7 +232,29 @@ class AdminController extends Controller
     public function updateAppointmentStatus(Request $request, Appointment $appointment)
     {
         if (!Auth::check()) return abort(403);
-        $appointment->update(['status' => $request->status]);
+        
+        $newStatus = $request->status;
+        $appointment->status = $newStatus;
+
+        if ($newStatus === 'Completada') {
+            if ($appointment->payment_status !== 'pagado') {
+                $appointment->payment_status = 'pagado';
+                \App\Models\Payment::create([
+                    'client_id'      => $appointment->client_id,
+                    'appointment_id' => $appointment->id,
+                    'amount'         => $appointment->total_price,
+                    'type'           => 'cita',
+                    'method'         => 'efectivo', // Método por defecto
+                    'paid_at'        => now(),
+                ]);
+            }
+        } elseif ($newStatus === 'Pendiente') {
+            $appointment->payment_status = 'pendiente';
+            \App\Models\Payment::where('appointment_id', $appointment->id)->delete();
+        }
+
+        $appointment->save();
+        
         return back();
     }
 

@@ -40,6 +40,7 @@ Route::post('/admin/settings/gallery/{id}/delete', [\App\Http\Controllers\Settin
 // Citas
 Route::get('/admin/appointments', [AdminController::class, 'appointments'])->name('admin.appointments.index');
 Route::post('/admin/appointment/{appointment}/status', [AdminController::class, 'updateAppointmentStatus'])->name('admin.appointment.update');
+Route::post('/admin/appointment/{appointment}/delete', [AdminController::class, 'destroyAppointment'])->name('admin.appointment.destroy');
 
 // Barberos
 Route::get('/admin/barbers', [AdminController::class, 'barbers'])->name('admin.barbers.index');
@@ -71,6 +72,7 @@ Route::post('/admin/clients/{client}/membership', [ClientController::class, 'add
 
 // ─── Finanzas ────────────────────────────────────────────────────────────────
 Route::get('/admin/finance', [FinanceController::class, 'index'])->name('admin.finance.index');
+Route::post('/admin/finance/pay-appointment/{appointment}', [FinanceController::class, 'payAppointment'])->name('admin.finance.pay');
 Route::get('/admin/finance/payments', [FinanceController::class, 'payments'])->name('admin.finance.payments');
 
 // ─── Reportes ────────────────────────────────────────────────────────────────

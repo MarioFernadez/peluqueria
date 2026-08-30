@@ -209,7 +209,8 @@
                     <th>Barbero</th>
                     <th>Servicio</th>
                     <th>Monto</th>
-                    <th>Estado turno</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
@@ -229,6 +230,18 @@
                     <td>{{ $appt->service->name ?? '—' }}</td>
                     <td style="font-weight:700;color:var(--yellow);">${{ number_format($appt->total_price, 0, ',', '.') }}</td>
                     <td><span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span></td>
+                    <td>
+                        <form method="POST" action="{{ route('admin.finance.pay', $appt) }}" style="display:inline-flex; gap: 0.4rem; align-items: center;">
+                            @csrf
+                            <select name="payment_method" class="form-control" style="width: auto; padding: 0.2rem 0.5rem; font-size: 0.75rem;" required>
+                                <option value="" disabled selected>Método...</option>
+                                <option value="efectivo">Efectivo</option>
+                                <option value="transferencia">Transf.</option>
+                                <option value="tarjeta">Tarjeta</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px;" onclick="return confirm('¿Confirmar cobro de ${{ number_format($appt->total_price, 0, ',', '.') }}?')">Cobrar</button>
+                        </form>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -269,6 +282,18 @@
             <div>
                 <span>Estado</span>
                 <span class="badge-status badge-{{ strtolower($appt->status) }}" style="margin-top:3px;">{{ $appt->status }}</span>
+            </div>
+            <div style="grid-column: span 2; margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                <form method="POST" action="{{ route('admin.finance.pay', $appt) }}" style="display:flex; gap: 0.5rem; align-items: center; width: 100%;">
+                    @csrf
+                    <select name="payment_method" class="form-control" style="flex: 1; padding: 0.3rem 0.5rem; font-size: 0.8rem;" required>
+                        <option value="" disabled selected>Seleccionar método...</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="tarjeta">Tarjeta</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem; border-radius: 4px;" onclick="return confirm('¿Confirmar cobro de ${{ number_format($appt->total_price, 0, ',', '.') }}?')">Cobrar</button>
+                </form>
             </div>
         </div>
     </div>

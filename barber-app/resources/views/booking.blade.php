@@ -417,10 +417,6 @@
                 Mis Turnos
                 <div class="nav-booking-dot"></div>
             </button>
-            <a href="/admin/login" class="nav-login">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>Admin</span>
-            </a>
         </div>
     </nav>
 
@@ -683,7 +679,7 @@
                     <div class="success-icon">✅</div>
                     <h2 class="success-title">¡Turno confirmado!</h2>
                     <p class="success-sub">
-                        Tu reserva <strong style="color:var(--gold);">#<span x-text="appointmentId"></span></strong> fue registrada con éxito.
+                        Tu turno fue reservado con éxito.
                     </p>
 
                     <div class="confirm-card" style="text-align:left; margin-bottom:1.25rem;">
@@ -780,7 +776,7 @@
     </div>
 
     <!-- WhatsApp float -->
-    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $waNumber) }}?text=Hola%2C+quiero+consultar+sobre+mi+reserva+en+{{ urlencode($businessName) }}" target="_blank" class="wa-float" title="WhatsApp">
+    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $waNumber) }}?text={{ urlencode($settings['whatsapp_message'] ?? 'Hola, quiero consultar sobre mi reserva en ' . $businessName) }}" target="_blank" class="wa-float" title="WhatsApp">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.974 0C5.348 0 0 5.349 0 11.974c0 2.113.558 4.1 1.535 5.823L0 23.999l6.347-1.51A11.913 11.913 0 0 0 11.974 24C18.6 24 24 18.65 24 11.974 24 5.348 18.6 0 11.974 0zm0 21.888c-1.974 0-3.817-.536-5.403-1.466l-.388-.23-4.017.957.999-3.934-.253-.403a9.876 9.876 0 0 1-1.512-5.312c0-5.475 4.462-9.937 9.937-9.937 5.474 0 9.937 4.462 9.937 9.937-.001 5.475-4.463 9.388-9.3 9.388z"/></svg>
     </a>
 
@@ -837,9 +833,16 @@
                         const d = new Date(today);
                         d.setDate(today.getDate() + i);
                         const dow = d.getDay();
-                        if (dow === 0) continue;
+                        if (dow === 0) continue; // No domingos
+                        
+                        // Obtenemos la fecha en formato YYYY-MM-DD usando la zona horaria local (evita errores de UTC)
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const dateStr = `${year}-${month}-${day}`;
+
                         this.availableDays.push({
-                            date: d.toISOString().split('T')[0],
+                            date: dateStr,
                             dayName: names[dow],
                             dayNum: d.getDate(),
                             full: false,
@@ -995,32 +998,86 @@
                 renderMyBookingsList() {
                     const container = document.getElementById('my-bookings-list');
                     if (!container) return;
-                    if (this.myBookings.length === 0) {
-                        container.innerHTML = `<div style="text-align:center;padding:2rem 0;color:#999;">
-                            <div style="font-size:2.5rem;margin-bottom:0.5rem">🗓️</div>
-                            <div style="font-size:0.85rem;">No tenés turnos activos desde este celular.</div>
-                        </div>`;
-                        return;
-                    }
-                    container.innerHTML = this.myBookings.map(b => `
-                        <div style="background:#f9f9f9;border:1px solid #eee;border-radius:12px;padding:1rem;margin-bottom:0.85rem;">
-                            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.65rem;">
-                                <div>
-                                    <div style="font-weight:700;font-size:0.95rem;margin-bottom:2px;">${b.customer_name}</div>
-                                    <div style="font-size:0.78rem;color:#888;">${b.service} &bull; ${b.barber}</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-weight:700;color:#D4A843;font-size:0.9rem;">${b.date}</div>
-                                    <div style="font-size:0.85rem;font-weight:600;">${b.time} hs</div>
-                                </div>
-                            </div>
-                            <button onclick="window._cancelFromDrawer(${b.appointment_id})"
-                                style="width:100%;padding:0.6rem;background:rgba(239,68,68,0.08);color:#dc2626;border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-weight:600;font-size:0.8rem;cursor:pointer;transition:background 0.15s;"
-                                onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'">
-                                ✕ Cancelar turno
+
+                    window._currentBookingTab = window._currentBookingTab || 'upcoming';
+
+                    // Clasificamos los turnos en Próximos e Historial
+                    const now = new Date();
+                    const upcoming = [];
+                    const history = [];
+
+                    // Ordenamos por fecha descendente (más recientes primero)
+                    const sorted = [...this.myBookings].sort((a, b) => {
+                        return new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00'));
+                    });
+
+                    sorted.forEach(b => {
+                        const bDate = new Date(b.date + 'T' + (b.time || '00:00'));
+                        // Si es de hoy o futuro, va a próximos. Si no, al historial.
+                        if (bDate >= now) {
+                            upcoming.push(b);
+                        } else {
+                            history.push(b);
+                        }
+                    });
+
+                    // Exponemos la función globalmente para los botones de las tabs
+                    window._renderMyBookingsList = this.renderMyBookingsList.bind(this);
+                    window._changeBookingTab = (tab) => {
+                        window._currentBookingTab = tab;
+                        window._renderMyBookingsList();
+                    };
+
+                    let html = `
+                        <div style="display:flex;gap:10px;margin-bottom:1.5rem;border-bottom:1px solid #eee;padding-bottom:0.5rem;">
+                            <button onclick="window._changeBookingTab('upcoming')" style="flex:1;background:none;border:none;font-weight:600;font-size:0.9rem;padding:8px 10px;cursor:pointer;color:${window._currentBookingTab === 'upcoming' ? 'var(--gold-dark)' : '#888'};border-bottom:${window._currentBookingTab === 'upcoming' ? '2px solid var(--gold)' : '2px solid transparent'};transition:all 0.2s;">
+                                Próximos (${upcoming.length})
+                            </button>
+                            <button onclick="window._changeBookingTab('history')" style="flex:1;background:none;border:none;font-weight:600;font-size:0.9rem;padding:8px 10px;cursor:pointer;color:${window._currentBookingTab === 'history' ? 'var(--gold-dark)' : '#888'};border-bottom:${window._currentBookingTab === 'history' ? '2px solid var(--gold)' : '2px solid transparent'};transition:all 0.2s;">
+                                Historial (${history.length})
                             </button>
                         </div>
-                    `).join('');
+                    `;
+
+                    const displayList = window._currentBookingTab === 'upcoming' ? upcoming : history;
+
+                    if (displayList.length === 0) {
+                        html += `<div style="text-align:center;padding:2rem 0;color:#999;">
+                            <div style="font-size:2.5rem;margin-bottom:0.5rem">🗓️</div>
+                            <div style="font-size:0.85rem;">No hay turnos en esta sección.</div>
+                        </div>`;
+                    } else {
+                        // Limitamos el historial para que no sea pesado
+                        const isHistory = window._currentBookingTab === 'history';
+                        const renderList = isHistory ? displayList.slice(0, 15) : displayList;
+
+                        html += renderList.map(b => `
+                            <div style="background:#f9f9f9;border:1px solid #eee;border-radius:12px;padding:1rem;margin-bottom:0.85rem;opacity:${isHistory ? '0.75' : '1'};">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.65rem;">
+                                    <div>
+                                        <div style="font-weight:700;font-size:0.95rem;margin-bottom:2px;text-decoration:${isHistory ? 'line-through' : 'none'};">${b.customer_name}</div>
+                                        <div style="font-size:0.78rem;color:#888;">${b.service} &bull; ${b.barber}</div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <div style="font-weight:700;color:${isHistory ? '#888' : '#D4A843'};font-size:0.9rem;">${b.date}</div>
+                                        <div style="font-size:0.85rem;font-weight:600;">${b.time} hs</div>
+                                    </div>
+                                </div>
+                                ${!isHistory ? `
+                                <button onclick="window._cancelFromDrawer(${b.appointment_id})"
+                                    style="width:100%;padding:0.6rem;background:rgba(239,68,68,0.08);color:#dc2626;border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-weight:600;font-size:0.8rem;cursor:pointer;transition:background 0.15s;"
+                                    onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'">
+                                    ✕ Cancelar turno
+                                </button>` : ''}
+                            </div>
+                        `).join('');
+
+                        if (isHistory && displayList.length > 15) {
+                            html += `<div style="text-align:center;font-size:0.75rem;color:#888;margin-top:1rem;">Mostrando los últimos 15 turnos.</div>`;
+                        }
+                    }
+
+                    container.innerHTML = html;
                 },
 
                 async submitBooking() {
@@ -1062,7 +1119,7 @@
                             // Disparar notificación push al admin
                             this.notifyAdmin(booking);
                             this.step = 5;
-                            this.showToast('✅ ¡Turno #' + this.appointmentId + ' confirmado!');
+                            this.showToast('✅ ¡Turno confirmado!');
                         } else {
                              const errorMsg = result.message || 'Faltan datos en el panel. Asegurate de crear al barbero y servicio.';
                              this.showToast('❌ Error: ' + errorMsg);
@@ -1147,5 +1204,10 @@
             } catch { alert('❌ Error al conectar. Intentá de nuevo.'); }
         };
     </script>
+    <!-- Enlace oculto a Admin -->
+    <div style="text-align: center; padding: 1.5rem 0; opacity: 0.4;">
+        <a href="/admin/login" style="color: var(--muted); font-size: 0.75rem; text-decoration: none; font-weight: 500;">Admin</a>
+    </div>
+
 </body>
 </html>

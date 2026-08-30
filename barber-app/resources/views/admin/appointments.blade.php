@@ -82,14 +82,20 @@
             <td>
                 <span class="badge-status badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span>
             </td>
-            <td>
+            <td style="white-space: nowrap;">
                 <form method="POST" action="{{ route('admin.appointment.update', $appt) }}" style="display:inline;">
                     @csrf
-                    <select name="status" onchange="this.form.submit()" class="form-control" style="width:auto;display:inline-block;padding:0.25rem 1.5rem 0.25rem 0.75rem;font-size:0.85rem;">
+                    <select name="status" onchange="this.form.submit()" class="form-control" style="width:auto;display:inline-block;padding:0.25rem 1.5rem 0.25rem 0.75rem;font-size:0.85rem; vertical-align: middle;">
                         @foreach(['Pendiente','Confirmada','Completada','Cancelado','No asistió'] as $st)
                             <option value="{{ $st }}" {{ $appt->status == $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
                     </select>
+                </form>
+                <form method="POST" action="{{ route('admin.appointment.destroy', $appt) }}" style="display:inline; margin-left: 0.5rem;" onsubmit="return confirm('¿Estás seguro de que deseas ELIMINAR este turno por completo? Esta acción liberará el horario para que otro cliente pueda agendar.');">
+                    @csrf
+                    <button type="submit" class="btn btn-sm" style="background: transparent; color: #ff4d4f; border: 1px solid #ff4d4f; padding: 0.25rem 0.5rem; vertical-align: middle;" title="Eliminar turno">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
                 </form>
             </td>
         </tr>

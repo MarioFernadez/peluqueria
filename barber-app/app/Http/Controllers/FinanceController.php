@@ -45,17 +45,29 @@ class FinanceController extends Controller
             ->orderBy('day')
             ->get();
 
-        // Pagos pendientes (citas sin pagar)
-        $pendingAppointments = Appointment::where('payment_status', 'pendiente')
-            ->where('status', '!=', 'Cancelada')
+        $now = now();
+        $currentDate = $now->toDateString();
+        $currentTime = $now->toTimeString();
+
+        $pendingQuery = Appointment::where('payment_status', 'pendiente')
+            ->whereNotIn('status', ['Cancelado', 'Cancelada'])
+            ->where(function ($q) use ($currentDate, $currentTime) {
+                $q->where('appointment_date', '<', $currentDate)
+                  ->orWhere(function ($q2) use ($currentDate, $currentTime) {
+                      $q2->where('appointment_date', $currentDate)
+                         ->where('appointment_time', '<=', $currentTime);
+                  });
+            });
+
+        // Pagos pendientes (citas sin pagar y que ya pasaron)
+        $pendingAppointments = (clone $pendingQuery)
             ->with(['client', 'barber', 'service'])
             ->orderBy('appointment_date', 'desc')
+            ->orderBy('appointment_time', 'desc')
             ->limit(10)
             ->get();
 
-        $pendingTotal = Appointment::where('payment_status', 'pendiente')
-            ->where('status', '!=', 'Cancelada')
-            ->sum('total_price');
+        $pendingTotal = (clone $pendingQuery)->sum('total_price');
 
         return view('admin.finance.index', compact(
             'totalRevenue', 'byMethod', 'byType',
@@ -86,6 +98,37 @@ class FinanceController extends Controller
         $payments = $query->paginate(30)->withQueryString();
 
         return view('admin.finance.payments', compact('payments'));
+    }
+
+    public function payAppointment(Request $request, Appointment $appointment)
+    {
+        $this->checkAuth();
+        
+        $request->validate([
+            'payment_method' => 'required|in:efectivo,tarjeta,transferencia,otro',
+        ]);
+
+        if ($appointment->payment_status === 'pagado') {
+            return redirect()->back()->with('error', 'El turno ya se encuentra pagado.');
+        }
+
+        // Crear registro de pago
+        Payment::create([
+            'client_id'      => $appointment->client_id, // Puede ser null si el cliente no está registrado
+            'appointment_id' => $appointment->id,
+            'amount'         => $appointment->total_price,
+            'type'           => 'cita',
+            'method'         => $request->payment_method,
+            'paid_at'        => now(),
+        ]);
+
+        // Actualizar turno
+        $appointment->update([
+            'payment_status' => 'pagado',
+            'status'         => 'Completada',
+        ]);
+
+        return redirect()->back()->with('success', 'Pago registrado correctamente.');
     }
 
     private function getPeriodDates(string $period, Request $request): array

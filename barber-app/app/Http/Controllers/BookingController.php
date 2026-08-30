@@ -228,8 +228,9 @@ class BookingController extends Controller
         }
 
         // Verificar que falten más de 5 minutos para el turno
+        $dateStr = \Carbon\Carbon::parse($appointment->appointment_date)->format('Y-m-d');
         $appointmentDatetime = \Carbon\Carbon::parse(
-            $appointment->appointment_date . ' ' . $appointment->appointment_time
+            $dateStr . ' ' . $appointment->appointment_time
         );
         $minutesUntilAppointment = now()->diffInMinutes($appointmentDatetime, false);
 

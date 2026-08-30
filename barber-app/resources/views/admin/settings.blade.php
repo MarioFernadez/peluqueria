@@ -87,7 +87,20 @@
                 <label class="form-label">URL del mapa (Google Maps iframe src)</label>
                 <textarea name="map_url" class="form-control" rows="3">{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=...' }}</textarea>
             </div>
-            <button class="btn btn-primary">Guardar Contacto</button>
+            
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
+            <div class="card-title" style="font-size: 1rem;">📱 Redes Sociales</div>
+
+            <div class="form-group">
+                <label class="form-label">URL de Instagram</label>
+                <input type="text" name="instagram_url" class="form-control" value="{{ $settings['instagram_url'] ?? '' }}" placeholder="https://instagram.com/tu_usuario">
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL de Facebook</label>
+                <input type="text" name="facebook_url" class="form-control" value="{{ $settings['facebook_url'] ?? '' }}" placeholder="https://facebook.com/tu_pagina">
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1rem;">Guardar Contacto y Redes</button>
         </form>
     </div>
 
