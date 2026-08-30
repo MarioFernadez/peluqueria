@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         // Administrador
         \App\Models\User::factory()->create([
             'name' => 'Administrador',
-            'email' => 'admin@barberia.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
+            'email' => 'admin@peluqueria.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('PASSWORD2026'),
         ]);
         // Barberos
         \App\Models\Barber::create([
