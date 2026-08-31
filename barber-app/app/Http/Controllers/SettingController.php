@@ -57,6 +57,29 @@ class SettingController extends Controller
 
         return redirect()->back()->with('success', 'Trabajo añadido a la galería.');
     }
+    public function updateGallery(Request $request, $id)
+    {
+        $work = GalleryWork::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $work->title = $request->title;
+        $work->subtitle = $request->subtitle;
+        $work->badge = $request->badge;
+        $work->is_active = $request->has('is_active');
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images/gallery', 'public');
+            $work->image_path = 'storage/' . $path;
+        }
+
+        $work->save();
+
+        return redirect()->back()->with('success', 'Trabajo actualizado correctamente.');
+    }
 
     public function destroyGallery($id)
     {

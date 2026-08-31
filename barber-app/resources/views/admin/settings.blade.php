@@ -142,10 +142,13 @@
                     <div style="padding: 0.5rem; background: var(--surface);">
                         <div style="font-weight: 600; font-size: 0.9rem;">{{ $work->title }}</div>
                         <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem;">{{ Str::limit($work->subtitle, 40) }}</div>
-                        <form method="POST" action="{{ route('admin.settings.gallery.destroy', $work->id) }}" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajo?')">
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">Eliminar</button>
-                        </form>
+                        <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button type="button" class="btn btn-ghost btn-sm" style="flex:1; justify-content:center; border:1px solid var(--border);" onclick="openEditGalleryModal({{ $work->id }}, '{{ addslashes($work->title) }}', '{{ addslashes($work->subtitle) }}', '{{ addslashes($work->badge) }}', {{ $work->is_active ? 'true' : 'false' }})">Editar</button>
+                            <form method="POST" action="{{ route('admin.settings.gallery.destroy', $work->id) }}" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajo?')" style="flex:1;">
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">Eliminar</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             @endforeach
@@ -186,5 +189,50 @@
         </form>
     </div>
 </div>
+
+{{-- Modal: Edit Gallery Work --}}
+<div class="modal-overlay" id="modal-edit-gallery">
+    <div class="modal">
+        <div class="modal-title">Editar Trabajo</div>
+        <form method="POST" action="" id="edit-gallery-form" enctype="multipart/form-data">
+            @csrf
+            <div class="form-group">
+                <label class="form-label">Título *</label>
+                <input type="text" name="title" id="edit-work-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                <textarea name="subtitle" id="edit-work-subtitle" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Etiqueta (Badge)</label>
+                <input type="text" name="badge" id="edit-work-badge" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reemplazar Imagen (Opcional)</label>
+                <input type="file" name="image" class="form-control">
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+                <input type="checkbox" name="is_active" id="edit-work-active" style="width:16px;height:16px;">
+                <label for="edit-work-active" class="form-label" style="margin:0;">Activo</label>
+            </div>
+            <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-gallery')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditGalleryModal(id, title, subtitle, badge, isActive) {
+    document.getElementById('edit-gallery-form').action = '/admin/settings/gallery/' + id + '/update';
+    document.getElementById('edit-work-title').value = title;
+    document.getElementById('edit-work-subtitle').value = subtitle;
+    document.getElementById('edit-work-badge').value = badge;
+    document.getElementById('edit-work-active').checked = isActive;
+    openModal('modal-edit-gallery');
+}
+</script>
 
 @endsection

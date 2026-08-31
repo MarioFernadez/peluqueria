@@ -35,6 +35,7 @@ Route::post('/barber/schedule', [\App\Http\Controllers\BarberDashboardController
 Route::get('/admin/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('admin.settings.index');
 Route::post('/admin/settings/update', [\App\Http\Controllers\SettingController::class, 'update'])->name('admin.settings.update');
 Route::post('/admin/settings/gallery', [\App\Http\Controllers\SettingController::class, 'storeGallery'])->name('admin.settings.gallery.store');
+Route::post('/admin/settings/gallery/{id}/update', [\App\Http\Controllers\SettingController::class, 'updateGallery'])->name('admin.settings.gallery.update');
 Route::post('/admin/settings/gallery/{id}/delete', [\App\Http\Controllers\SettingController::class, 'destroyGallery'])->name('admin.settings.gallery.destroy');
 
 // Citas
