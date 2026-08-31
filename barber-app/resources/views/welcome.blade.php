@@ -211,28 +211,68 @@
         .divider { border: none; border-top: 1px solid var(--border); }
 
         /* ─── Gallery ─── */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2.5rem; }
-        .gallery-card {
-            position: relative; border-radius: 16px; overflow: hidden;
-            aspect-ratio: 3/4; cursor: pointer;
-            transition: transform 0.3s ease;
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 2.5rem;
         }
-        .gallery-card:hover { transform: scale(1.02); }
-        .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; }
-        .gallery-card:hover img { transform: scale(1.08); }
+        /* First card spans 2 rows if there are 3+ items */
+        .gallery-card:first-child {
+            grid-row: span 1;
+        }
+        .gallery-card {
+            position: relative; border-radius: 20px; overflow: hidden;
+            aspect-ratio: 3/4; cursor: pointer;
+            transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.35s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+            background: #111;
+        }
+        .gallery-card:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
+        .gallery-card img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            transition: transform 0.5s ease;
+            filter: brightness(0.92);
+        }
+        .gallery-card:hover img { transform: scale(1.07); filter: brightness(0.8); }
         .gallery-card-overlay {
             position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 50%);
+            background: linear-gradient(to top,
+                rgba(0,0,0,0.92) 0%,
+                rgba(0,0,0,0.55) 35%,
+                rgba(0,0,0,0.05) 65%,
+                transparent 100%);
             display: flex; flex-direction: column; justify-content: flex-end;
-            padding: 1.2rem;
+            padding: 1.4rem 1.2rem;
         }
-        .gallery-card-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: #ffffff; }
-        .gallery-card-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+        .gallery-card-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800; font-size: 1.05rem;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+        .gallery-card-sub {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.75);
+            margin-top: 0;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
         .gallery-card-badge {
-            position: absolute; top: 12px; left: 12px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; font-size: 0.7rem; font-weight: 600; padding: 4px 10px; border-radius: 50px;
+            position: absolute; top: 14px; left: 14px;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #fff; font-size: 0.68rem; font-weight: 700;
+            padding: 5px 12px; border-radius: 50px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
 
         /* ─── Staff & Services ─── */
@@ -378,7 +418,7 @@
             .hamburger-btn { display: flex !important; }
             .hero-title { font-size: 2rem; }
             .hero-content { padding: 0 1.5rem; }
-            .gallery-grid { grid-template-columns: 1fr; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
             .staff-services-grid { grid-template-columns: 1fr; }
             .location-grid { grid-template-columns: 1fr; }
             .footer-grid { grid-template-columns: 1fr; gap: 2rem; }

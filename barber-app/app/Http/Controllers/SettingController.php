@@ -40,6 +40,8 @@ class SettingController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:60000',
+            'badge' => 'nullable|string|max:255',
             'image' => 'required|image|max:2048',
         ]);
 
@@ -63,6 +65,8 @@ class SettingController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:60000',
+            'badge' => 'nullable|string|max:255',
             'image' => 'nullable|image|max:2048',
         ]);
 
