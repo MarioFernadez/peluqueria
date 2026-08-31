@@ -544,33 +544,6 @@
         </div>
     </section>
 
-    {{-- ─── GALERÍA ─── --}}
-    @if(isset($galleryWorks) && $galleryWorks->isNotEmpty())
-    <section class="section" id="galeria">
-        <hr class="divider" style="margin-bottom: 3rem;">
-        <div>
-            <span class="section-tag">Galería</span>
-            <h2 class="section-title">Nuestros trabajos</h2>
-            <p class="section-subtitle">El resultado habla por sí solo.</p>
-        </div>
-
-        <div class="gallery-grid">
-            @foreach($galleryWorks as $index => $work)
-                <div class="gallery-card fade-in-up delay-{{ min($index + 1, 4) }}">
-                    @if($work->badge)
-                        <span class="gallery-card-badge">{{ $work->badge }}</span>
-                    @endif
-                    <img src="{{ asset($work->image_path) }}" alt="{{ $work->title }}" loading="lazy">
-                    <div class="gallery-card-overlay">
-                        <div class="gallery-card-title">{{ $work->title }}</div>
-                        <div class="gallery-card-sub">{{ $work->subtitle }}</div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </section>
-    @endif
-
     <!-- ─── STAFF & SERVICIOS (DINÁMICO) ─── -->
     <section class="section" id="servicios" style="padding-top: 0;">
         <hr class="divider" style="margin-bottom: 3rem;">
@@ -685,6 +658,33 @@
         </div>
         @endif
     </section>
+
+    {{-- ─── GALERÍA ─── --}}
+    @if(isset($galleryWorks) && $galleryWorks->isNotEmpty())
+    <section class="section" id="galeria" style="padding-top: 0;">
+        <hr class="divider" style="margin-bottom: 3rem;">
+        <div>
+            <span class="section-tag">Galería</span>
+            <h2 class="section-title">Nuestros trabajos</h2>
+            <p class="section-subtitle">El resultado habla por sí solo.</p>
+        </div>
+
+        <div class="gallery-grid">
+            @foreach($galleryWorks as $index => $work)
+                <div class="gallery-card fade-in-up delay-{{ min($index + 1, 4) }}">
+                    @if($work->badge)
+                        <span class="gallery-card-badge">{{ $work->badge }}</span>
+                    @endif
+                    <img src="{{ asset($work->image_path) }}" alt="{{ $work->title }}" loading="lazy">
+                    <div class="gallery-card-overlay">
+                        <div class="gallery-card-title">{{ $work->title }}</div>
+                        <div class="gallery-card-sub">{{ $work->subtitle }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
 
     <!-- ─── UBICACIÓN ─── -->
     <section class="section" id="ubicacion" style="padding-top: 0;">
