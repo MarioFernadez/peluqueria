@@ -84,8 +84,28 @@
                 <textarea name="contact_address" class="form-control" rows="2">{{ $settings['contact_address'] ?? '14 de enero calle Gral. Artigas y Juan L. Mallorquín, Encarnación, Paraguay' }}</textarea>
             </div>
             <div class="form-group">
-                <label class="form-label">URL del mapa (Google Maps iframe src)</label>
-                <textarea name="map_url" class="form-control" rows="3">{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=...' }}</textarea>
+                <label class="form-label">URL del mapa (Google Maps iframe src para el home)</label>
+                <textarea name="map_url" class="form-control" rows="2">{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=...' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Enlace "Cómo llegar" (URL de Google Maps)</label>
+                <input type="url" name="map_link" class="form-control" value="{{ $settings['map_link'] ?? '' }}" placeholder="https://maps.app.goo.gl/...">
+            </div>
+
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
+            <div class="card-title" style="font-size: 1rem;">⏰ Horarios (Sección Encuéntranos)</div>
+
+            <div class="form-group">
+                <label class="form-label">Lunes a Viernes</label>
+                <input type="text" name="schedule_weekdays" class="form-control" value="{{ $settings['schedule_weekdays'] ?? '09:00 - 20:00' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sábados</label>
+                <input type="text" name="schedule_saturdays" class="form-control" value="{{ $settings['schedule_saturdays'] ?? '09:00 - 19:00' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Domingos</label>
+                <input type="text" name="schedule_sundays" class="form-control" value="{{ $settings['schedule_sundays'] ?? 'Cerrado' }}">
             </div>
             
             <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">

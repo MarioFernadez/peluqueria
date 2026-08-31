@@ -672,14 +672,14 @@
                     <div>
                         <div class="location-label">Horarios</div>
                         <div class="hours-grid">
-                            <span class="hours-day">Lunes — Viernes</span><span class="hours-time">09:00 – 20:00</span>
-                            <span class="hours-day">Sábado</span><span class="hours-time">09:00 – 19:00</span>
-                            <span class="hours-day">Domingo</span><span class="hours-time hours-closed">Cerrado</span>
+                            <span class="hours-day">Lunes — Viernes</span><span class="hours-time">{{ $settings['schedule_weekdays'] ?? '09:00 - 20:00' }}</span>
+                            <span class="hours-day">Sábado</span><span class="hours-time">{{ $settings['schedule_saturdays'] ?? '09:00 - 19:00' }}</span>
+                            <span class="hours-day">Domingo</span><span class="hours-time {{ (isset($settings['schedule_sundays']) && strtolower($settings['schedule_sundays']) !== 'cerrado') ? '' : 'hours-closed' }}">{{ $settings['schedule_sundays'] ?? 'Cerrado' }}</span>
                         </div>
                     </div>
                 </div>
 
-                <a href="https://maps.google.com/?q=Encarnación+Paraguay" target="_blank" class="btn-directions">
+                <a href="{{ $settings['map_link'] ?? 'https://maps.google.com/?q=Encarnación+Paraguay' }}" target="_blank" class="btn-directions">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
                     Cómo llegar
                 </a>
@@ -687,12 +687,16 @@
 
             <!-- Mapa -->
             <div class="map-container">
-                <iframe
-                    src="{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28916.35!2d-55.8456!3d-27.3364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945cfeb6a68f6f85%3A0x8b96b94d79d5869c!2sEncarnaci%C3%B3n%2C%20Paraguay!5e0!3m2!1ses!2sar!4v1' }}"
-                    loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    title="Mapa de {{ $settings['hero_title'] ?? 'Athenea Barber' }}"
-                ></iframe>
+                @if(isset($settings['map_url']) && str_starts_with(trim($settings['map_url']), '<iframe'))
+                    {!! $settings['map_url'] !!}
+                @else
+                    <iframe
+                        src="{{ $settings['map_url'] ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28916.35!2d-55.8456!3d-27.3364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945cfeb6a68f6f85%3A0x8b96b94d79d5869c!2sEncarnaci%C3%B3n%2C%20Paraguay!5e0!3m2!1ses!2sar!4v1' }}"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Mapa de {{ $settings['hero_title'] ?? 'Athenea Barber' }}"
+                    ></iframe>
+                @endif
             </div>
         </div>
     </section>
