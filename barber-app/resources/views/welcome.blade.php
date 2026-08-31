@@ -703,7 +703,7 @@
 
     <!-- ─── FOOTER ─── -->
     <!-- ─── WHATSAPP FLOTANTE ─── -->
-    <a href="https://wa.me/{{ $settings['whatsapp_number'] ?? '595000000000' }}?text={{ urlencode($settings['whatsapp_message'] ?? 'Hola! Quiero reservar un turno en ' . ($settings['hero_title'] ?? 'Athenea Barber')) }}" target="_blank" id="whatsapp-btn"
+    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $settings['whatsapp_number'] ?? '595000000000') }}?text={{ urlencode($settings['whatsapp_message'] ?? 'Hola! Quiero reservar un turno en ' . ($settings['hero_title'] ?? 'Athenea Barber')) }}" target="_blank" id="whatsapp-btn"
         style="position:fixed; bottom:2rem; right:2rem; z-index:200;
                width:58px; height:58px; border-radius:50%;
                background: linear-gradient(135deg, #25D366, #128C7E);
