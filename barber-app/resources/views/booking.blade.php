@@ -648,8 +648,12 @@
                             <span style="font-size:1.2rem;">⚠️</span>
                             <span style="font-weight:700; font-size:0.85rem; color:var(--gold-dark);">Política de cancelación</span>
                         </div>
-                        <p style="font-size:0.8rem; color:var(--text); line-height:1.5; margin:0;">
+                        <p style="font-size:0.8rem; color:var(--text); line-height:1.5; margin:0; margin-bottom:0.5rem;">
                             Si necesitás cancelar tu turno, tenés tiempo hasta <strong>5 minutos antes</strong> de la hora reservada. Pasado ese tiempo, el turno ya no se podrá cancelar a través del sistema.
+                        </p>
+                        <p style="font-size:0.8rem; color:var(--text); line-height:1.5; margin:0;">
+                            <strong>Tolerancia máxima:</strong> 30 minutos.<br>
+                            <strong>Inasistencia:</strong> Un recargo del 50% aplicará en el próximo corte.
                         </p>
                     </div>
 
