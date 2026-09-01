@@ -473,7 +473,7 @@
             <li><a href="#inicio" class="active">Inicio</a></li>
             <li><a href="#servicios">Servicios</a></li>
             <li><a href="#galeria">Galería</a></li>
-            <li><a href="#ubicacion">Sobre Nosotros</a></li>
+            <li><a href="#ubicacion">Ubicación</a></li>
         </ul>
 
         <div class="nav-right">
@@ -554,9 +554,9 @@
             <!-- Header con título y thumbnails de barberos -->
             <div class="staff-header">
                 <div>
-                    <span class="section-tag">Equipo</span>
-                    <h2 class="section-title">Staff y servicios</h2>
-                    <p class="section-subtitle">Nuestros expertos están listos para brindarte la mejor experiencia de grooming.</p>
+                    <span class="section-tag">El Barbero</span>
+                    <h2 class="section-title">Mis Servicios</h2>
+                    <p class="section-subtitle">Estoy listo para brindarte la mejor experiencia de grooming.</p>
                 </div>
                 <!-- Avatares clickeables -->
                 <div style="display:flex; gap: 4px; flex-wrap: wrap;">
@@ -648,13 +648,13 @@
         <!-- Fallback si no hay barberos cargados -->
         <div class="staff-header">
             <div>
-                <span class="section-tag">Equipo</span>
-                <h2 class="section-title">Staff y servicios</h2>
-                <p class="section-subtitle">Nuestros expertos están listos para brindarte la mejor experiencia de grooming.</p>
+                <span class="section-tag">El Barbero</span>
+                <h2 class="section-title">Mis Servicios</h2>
+                <p class="section-subtitle">Estoy listo para brindarte la mejor experiencia de grooming.</p>
             </div>
         </div>
         <div style="text-align:center; padding: 3rem; color: var(--text-muted);">
-            Próximamente conocé a nuestro equipo.
+            Próximamente conoce a tu barbero.
         </div>
         @endif
     </section>
@@ -665,7 +665,7 @@
         <hr class="divider" style="margin-bottom: 3rem;">
         <div>
             <span class="section-tag">Galería</span>
-            <h2 class="section-title">Nuestros trabajos</h2>
+            <h2 class="section-title">Mi trabajo</h2>
             <p class="section-subtitle">El resultado habla por sí solo.</p>
         </div>
 
@@ -806,9 +806,8 @@
             <div>
                 <div class="footer-col-title">Empresa</div>
                 <ul class="footer-links">
-                    <li><a href="#">Sobre nosotros</a></li>
+                    <li><a href="#ubicacion">Ubicación</a></li>
                     <li><a href="#galeria">Galería</a></li>
-                    <li><a href="#">Carreras</a></li>
                 </ul>
             </div>
 
