@@ -55,6 +55,13 @@ class BookingController extends Controller
         $service = Service::findOrFail($request->service_id);
         $date    = $request->date;
 
+        // Check if the date is blocked globally or for this specific barber
+        $blockedDate = \App\Models\BlockedDate::where('date', $date)
+            ->where(function ($query) use ($barber) {
+                $query->whereNull('barber_id')
+                      ->orWhere('barber_id', $barber->id);
+            })->first();
+
         $startTime = \Carbon\Carbon::parse($date . ' 07:00:00');
         $endTime   = \Carbon\Carbon::parse($date . ' 22:00:00');
         $duration  = $service->duration_min;
@@ -94,8 +101,14 @@ class BookingController extends Controller
             $isPast           = false;
             $bookedInfo       = null;
 
+            // 0. Check if the entire date is blocked
+            if ($blockedDate) {
+                $isAvailable = false;
+                $isBlockedByAdmin = true;
+            }
+
             // 1. Block hours that have already passed (today only)
-            if ($isToday && $slotStart->lte($now)) {
+            if ($isAvailable && $isToday && $slotStart->lte($now)) {
                 $isAvailable = false;
                 $isPast      = true;
             }
@@ -353,5 +366,33 @@ class BookingController extends Controller
         $barber->save();
 
         return response()->json(['success' => true, 'blocked_slots' => $blockedSlots]);
+    }
+
+    /**
+     * Returns the list of blocked dates for the next N days for a given barber.
+     * Includes both global blocks (barber_id = null) and barber-specific blocks.
+     */
+    public function getBlockedDates(Request $request)
+    {
+        $request->validate([
+            'barber_id' => 'required|exists:barbers,id',
+        ]);
+
+        $days = (int) ($request->input('days', 60));
+        $from = now()->toDateString();
+        $to   = now()->addDays($days)->toDateString();
+
+        $blocked = \App\Models\BlockedDate::where(function ($query) use ($request) {
+                $query->whereNull('barber_id')
+                      ->orWhere('barber_id', $request->barber_id);
+            })
+            ->whereBetween('date', [$from, $to])
+            ->get()
+            ->map(fn($b) => [
+                'date'   => $b->date->toDateString(),
+                'reason' => $b->reason,
+            ]);
+
+        return response()->json(['blocked_dates' => $blocked]);
     }
 }

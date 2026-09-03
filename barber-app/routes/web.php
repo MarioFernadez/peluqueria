@@ -12,6 +12,7 @@ Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('/booking', [BookingController::class, 'booking'])->name('booking.index');
 Route::get('/api/booking/data', [BookingController::class, 'getData']);
 Route::get('/api/booking/availability', [BookingController::class, 'getAvailability']);
+Route::get('/api/booking/blocked-dates', [BookingController::class, 'getBlockedDates']);
 Route::post('/api/booking/store', [BookingController::class, 'store']);
 Route::post('/api/booking/cancel', [BookingController::class, 'cancel']);
 Route::post('/api/booking/notify-admin', [BookingController::class, 'notifyAdmin']);
@@ -50,6 +51,11 @@ Route::post('/admin/barber/{barber}/update', [AdminController::class, 'updateBar
 Route::post('/admin/barber/{barber}/delete', [AdminController::class, 'destroyBarber'])->name('admin.barber.destroy');
 Route::get('/admin/barber/{barber}/schedule', [AdminController::class, 'barberSchedule'])->name('admin.barber.schedule');
 Route::post('/admin/barber/{barber}/schedule', [AdminController::class, 'updateBarberSchedule'])->name('admin.barber.schedule.update');
+
+// Días Bloqueados (Excepciones)
+Route::get('/admin/blocked-dates', [AdminController::class, 'blockedDates'])->name('admin.blocked_dates.index');
+Route::post('/admin/blocked-dates', [AdminController::class, 'storeBlockedDate'])->name('admin.blocked_dates.store');
+Route::post('/admin/blocked-dates/{blockedDate}/delete', [AdminController::class, 'destroyBlockedDate'])->name('admin.blocked_dates.destroy');
 
 // Servicios
 Route::get('/admin/services', [AdminController::class, 'services'])->name('admin.services.index');

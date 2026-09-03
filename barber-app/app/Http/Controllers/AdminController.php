@@ -404,4 +404,33 @@ class AdminController extends Controller
         $membership->update($validated);
         return back()->with('success', 'Plan actualizado');
     }
+
+    // Blocked Dates CRUD
+    public function blockedDates()
+    {
+        if (!Auth::check()) return redirect()->route('admin.login');
+        $blockedDates = \App\Models\BlockedDate::with('barber')->orderBy('date', 'desc')->get();
+        $barbers = Barber::all();
+        return view('admin.blocked_dates.index', compact('blockedDates', 'barbers'));
+    }
+
+    public function storeBlockedDate(Request $request)
+    {
+        if (!Auth::check()) return abort(403);
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'barber_id' => 'nullable|exists:barbers,id',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        \App\Models\BlockedDate::create($validated);
+        return back()->with('success', 'Día bloqueado correctamente');
+    }
+
+    public function destroyBlockedDate(\App\Models\BlockedDate $blockedDate)
+    {
+        if (!Auth::check()) return abort(403);
+        $blockedDate->delete();
+        return back()->with('success', 'Día desbloqueado correctamente');
+    }
 }

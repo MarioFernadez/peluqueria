@@ -304,16 +304,7 @@
         .success-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.4rem; }
         .success-sub { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
 
-        /* ── WHATSAPP FLOAT ── */
-        .wa-float {
-            position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 300;
-            width: 50px; height: 50px; border-radius: 50%;
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 16px rgba(37,211,102,0.5);
-            text-decoration: none; transition: transform 0.25s;
-        }
-        .wa-float:hover { transform: scale(1.1); }
+
 
         /* ── TOAST ── */
         .toast {
@@ -559,11 +550,17 @@
 
                     <div class="date-grid">
                         <template x-for="day in availableDays" :key="day.date">
-                            <button class="date-card" :class="{ disabled: day.full, selected: selectedDate === day.date }" :disabled="day.full" @click="!day.full && selectDate(day.date)">
+                            <button
+                                class="date-card"
+                                :class="{ disabled: day.full || day.blocked, selected: selectedDate === day.date, 'date-blocked': day.blocked }"
+                                :disabled="day.full || day.blocked"
+                                @click="!day.full && !day.blocked && selectDate(day.date)"
+                            >
                                 <div class="date-day-name" x-text="day.dayName"></div>
                                 <div class="date-num" x-text="day.dayNum"></div>
-                                <template x-if="day.full"><div class="date-full">Completo</div></template>
-                                <template x-if="day.discount && !day.full"><div class="date-discount">-25%</div></template>
+                                <template x-if="day.blocked"><div class="date-full" style="color:#ef4444;background:rgba(239,68,68,0.1);">Cerrado</div></template>
+                                <template x-if="day.full && !day.blocked"><div class="date-full">Completo</div></template>
+                                <template x-if="day.discount && !day.full && !day.blocked"><div class="date-discount">-25%</div></template>
                             </button>
                         </template>
                     </div>
@@ -779,10 +776,7 @@
         </div>
     </div>
 
-    <!-- WhatsApp float -->
-    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $waNumber) }}?text={{ urlencode($settings['whatsapp_message'] ?? 'Hola, quiero consultar sobre mi reserva en ' . $businessName) }}" target="_blank" class="wa-float" title="WhatsApp">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.974 0C5.348 0 0 5.349 0 11.974c0 2.113.558 4.1 1.535 5.823L0 23.999l6.347-1.51A11.913 11.913 0 0 0 11.974 24C18.6 24 24 18.65 24 11.974 24 5.348 18.6 0 11.974 0zm0 21.888c-1.974 0-3.817-.536-5.403-1.466l-.388-.23-4.017.957.999-3.934-.253-.403a9.876 9.876 0 0 1-1.512-5.312c0-5.475 4.462-9.937 9.937-9.937 5.474 0 9.937 4.462 9.937 9.937-.001 5.475-4.463 9.388-9.3 9.388z"/></svg>
-    </a>
+
 
     <!-- Toast -->
     <div id="bk-toast" class="toast">
@@ -822,6 +816,7 @@
                 isCancelling: false,
                 appointmentId: null,
                 myBookings: JSON.parse(localStorage.getItem('athenea_bookings') || '[]'),
+                _blockedDatesCache: {},
 
                 async init() {
                     this.generateDays();
@@ -829,11 +824,11 @@
                     this.renderMyBookingsList();
                 },
 
-                generateDays() {
+                generateDays(blockedDateSet = new Set()) {
                     const names = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
                     const today = new Date();
                     this.availableDays = [];
-                    for (let i = 0; i < 14; i++) {
+                    for (let i = 0; i < 30; i++) {
                         const d = new Date(today);
                         d.setDate(today.getDate() + i);
                         const dow = d.getDay();
@@ -850,9 +845,26 @@
                             dayName: names[dow],
                             dayNum: d.getDate(),
                             full: false,
+                            blocked: blockedDateSet.has(dateStr),
                             discount: false
                         });
-                        if (this.availableDays.length >= 10) break;
+                        if (this.availableDays.length >= 14) break;
+                    }
+                },
+
+                async loadBlockedDatesForBarber(barberId) {
+                    if (this._blockedDatesCache[barberId] !== undefined) {
+                        return this._blockedDatesCache[barberId];
+                    }
+                    try {
+                        const res = await fetch(`/api/booking/blocked-dates?barber_id=${barberId}&days=60`);
+                        const data = await res.json();
+                        const dates = (data.blocked_dates || []).map(b => b.date);
+                        this._blockedDatesCache[barberId] = new Set(dates);
+                        return this._blockedDatesCache[barberId];
+                    } catch {
+                        this._blockedDatesCache[barberId] = new Set();
+                        return this._blockedDatesCache[barberId];
                     }
                 },
 
@@ -968,11 +980,24 @@
                     setTimeout(() => this.nextStep(), 180);
                 },
 
-                nextStep() { 
+                async nextStep() { 
                     if (this.step === 1 && !this.selectedBarberId) return;
                     if (this.step === 2 && !this.selectedServiceId) return;
                     if (this.step === 3 && (!this.selectedDate || !this.selectedTime)) return;
-                    if (this.step < 5) this.step++; 
+                    if (this.step < 5) {
+                        this.step++;
+                        // When entering step 3, reload days with blocked dates for this barber
+                        if (this.step === 3 && this.selectedBarberId) {
+                            const blocked = await this.loadBlockedDatesForBarber(this.selectedBarberId);
+                            this.generateDays(blocked);
+                            // If previously selected date is now blocked, clear it
+                            if (this.selectedDate && blocked.has(this.selectedDate)) {
+                                this.selectedDate = '';
+                                this.selectedTime = '';
+                                this.allSlots = [];
+                            }
+                        }
+                    }
                 },
                 prevStep() { if (this.step > 1) this.step--; },
 
