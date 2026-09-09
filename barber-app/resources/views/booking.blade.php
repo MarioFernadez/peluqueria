@@ -849,7 +849,7 @@
                             blocked: blockedDateSet.has(dateStr),
                             discount: false
                         });
-                        if (this.availableDays.length >= 7) break;
+                        if (this.availableDays.length >= 10) break;
                     }
                 },
 
