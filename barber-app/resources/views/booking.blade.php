@@ -227,6 +227,7 @@
             padding: 8px 4px; background: var(--white); border: 2px solid var(--border);
             border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
             text-align: center; transition: all 0.2s; color: var(--text);
+            overflow: hidden;
         }
         .time-slot:hover { border-color: rgba(212,168,67,0.5); }
         .time-slot.selected { background: var(--gold); border-color: var(--gold); color: #000; }
@@ -585,7 +586,7 @@
                                 >
                                     <span x-text="slot.time"></span>
                                     <span x-show="!slot.available && isMySlot(slot)" style="display:block; font-size:0.62rem; margin-top:1px;">Mi turno</span>
-                                    <span x-show="!slot.available && !isMySlot(slot) && !slot.is_blocked_by_admin" style="display:block; font-size:0.62rem; margin-top:1px;" x-text="slot.booked ? slot.booked.customer_masked : 'Reservado'"></span>
+                                    <span x-show="!slot.available && !isMySlot(slot) && !slot.is_blocked_by_admin" style="display:block; font-size:0.62rem; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" x-text="slot.booked ? slot.booked.customer_masked : 'Reservado'"></span>
                                 </button>
                             </template>
                         </div>
@@ -848,7 +849,7 @@
                             blocked: blockedDateSet.has(dateStr),
                             discount: false
                         });
-                        if (this.availableDays.length >= 14) break;
+                        if (this.availableDays.length >= 7) break;
                     }
                 },
 
