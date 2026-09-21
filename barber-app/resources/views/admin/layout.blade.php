@@ -303,8 +303,13 @@
 
         /* ── Responsive table wrapper ── */
         .table-responsive {
+            width: 100%;
+            display: block;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            position: relative;
+            z-index: 1;
+            transform: translateZ(0);
         }
 
         /* ── Mobile cards for tables ── */
