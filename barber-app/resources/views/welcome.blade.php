@@ -424,7 +424,6 @@
             .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
             .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
             .section { padding: 3rem 1.5rem; }
-            #whatsapp-btn { bottom: 1.25rem !important; right: 1.25rem !important; width: 50px !important; height: 50px !important; }
         }
         @media (max-width: 480px) {
             .gallery-grid { grid-template-columns: 1fr; }
@@ -742,22 +741,6 @@
     </section>
 
     <!-- ─── FOOTER ─── -->
-    <!-- ─── WHATSAPP FLOTANTE ─── -->
-    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $settings['whatsapp_number'] ?? '595000000000') }}?text={{ urlencode($settings['whatsapp_message'] ?? 'Hola! Quiero reservar un turno en ' . ($settings['hero_title'] ?? 'Athenea Barber')) }}" target="_blank" id="whatsapp-btn"
-        style="position:fixed; bottom:2rem; right:2rem; z-index:200;
-               width:58px; height:58px; border-radius:50%;
-               background: linear-gradient(135deg, #25D366, #128C7E);
-               display:flex; align-items:center; justify-content:center;
-               box-shadow: 0 4px 20px rgba(37,211,102,0.5);
-               text-decoration:none; transition: all 0.3s ease;
-               animation: whatsapp-pulse 2.5s infinite;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-            <path d="M11.974 0C5.348 0 0 5.349 0 11.974c0 2.113.558 4.1 1.535 5.823L0 23.999l6.347-1.51A11.913 11.913 0 0 0 11.974 24C18.6 24 24 18.65 24 11.974 24 5.348 18.6 0 11.974 0zm0 21.888c-1.974 0-3.817-.536-5.403-1.466l-.388-.23-4.017.957.999-3.934-.253-.403a9.876 9.876 0 0 1-1.512-5.312c0-5.475 4.462-9.937 9.937-9.937 5.474 0 9.937 4.462 9.937 9.937-.001 5.475-4.463 9.388-9.3 9.388z"/>
-        </svg>
-        <!-- Tooltip -->
-        <span style="position:absolute; right:68px; background:#1a1a1a; color:#fff; font-size:0.78rem; font-weight:600; padding:6px 12px; border-radius:8px; white-space:nowrap; opacity:0; transition:opacity 0.2s; pointer-events:none; border: 1px solid rgba(255,255,255,0.1);" class="wa-tooltip">¡Escribinos!</span>
-    </a>
 
     <!-- ─── MOBILE MENU OVERLAY ─── -->
     <div id="mobile-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:300; flex-direction:column; align-items:center; justify-content:center; gap:2rem;">
@@ -872,11 +855,6 @@
             });
         });
 
-        // ── WhatsApp tooltip hover ──
-        const waBtn = document.getElementById('whatsapp-btn');
-        const waTooltip = waBtn?.querySelector('.wa-tooltip');
-        waBtn?.addEventListener('mouseenter', () => { if(waTooltip) waTooltip.style.opacity = '1'; });
-        waBtn?.addEventListener('mouseleave', () => { if(waTooltip) waTooltip.style.opacity = '0'; });
 
         // ── Mobile menu ──
         function openMobileMenu() { const o = document.getElementById('mobile-overlay'); if(o){ o.style.display='flex'; } }
@@ -945,12 +923,6 @@
         }
         .staff-wrapper { width: 100%; }
     </style>
-    <style>
-        @keyframes whatsapp-pulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,0.5); }
-            50% { box-shadow: 0 4px 30px rgba(37,211,102,0.8), 0 0 0 8px rgba(37,211,102,0.1); }
-        }
-        #whatsapp-btn:hover { transform: scale(1.1); }
-    </style>
+
 </body>
 </html>
