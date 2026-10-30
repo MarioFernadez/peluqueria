@@ -69,7 +69,7 @@ class Appointment extends Model
 
         $query = self::where('barber_id', $barberId)
             ->whereDate('appointment_date', $date)
-            ->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(status)'), ['cancelado', 'cancelada']);
+            ->whereNotIn('status', ['Cancelado', 'Cancelada', 'cancelado', 'cancelada']);
 
         if ($excludeAppointmentId) {
             $query->where('id', '!=', $excludeAppointmentId);

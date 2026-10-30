@@ -71,7 +71,7 @@ class BookingController extends Controller
 
         $appointments = Appointment::where('barber_id', $request->barber_id)
             ->whereDate('appointment_date', $date)
-            ->whereNotIn(DB::raw('LOWER(status)'), ['cancelado', 'cancelada'])
+            ->whereNotIn('status', ['Cancelado', 'Cancelada', 'cancelado', 'cancelada'])
             ->get();
 
         $now = now();
