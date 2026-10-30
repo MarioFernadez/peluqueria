@@ -28,9 +28,8 @@ class BookingFlowTest extends TestCase
         $service = Service::create([
             'name' => 'Corte Clásico',
             'category' => 'Corte',
-            'description' => 'Corte de cabello tradicional',
             'price' => 1500,
-            'duration_minutes' => 30,
+            'duration_min' => 30,
             'is_active' => true,
         ]);
 
@@ -53,30 +52,31 @@ class BookingFlowTest extends TestCase
 
         $service = Service::create([
             'name' => 'Fade',
+            'category' => 'Corte',
             'price' => 2000,
-            'duration_minutes' => 45,
+            'duration_min' => 45,
             'is_active' => true,
         ]);
 
         $appointmentData = [
-            'barber_id' => $barber->id,
-            'service_id' => $service->id,
-            'customer_name' => 'Carlos Cliente',
-            'customer_phone' => '1234567890',
-            'date' => date('Y-m-d', strtotime('+1 day')),
-            'time' => '10:00',
-            'total_price' => 2000,
+            'barber_id'        => $barber->id,
+            'service_id'       => $service->id,
+            'customer_name'    => 'Carlos Cliente',
+            'customer_phone'   => '1234567890',
+            'appointment_date' => date('Y-m-d', strtotime('+1 day')),
+            'appointment_time' => '10:00',
+            'total_price'      => 2000,
         ];
 
         $response = $this->postJson('/api/booking/store', $appointmentData);
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['success', 'appointment_id', 'message']);
+        $response->assertJsonStructure(['success', 'appointment']);
         
         $this->assertDatabaseHas('appointments', [
             'customer_name' => 'Carlos Cliente',
-            'barber_id' => $barber->id,
-            'service_id' => $service->id,
+            'barber_id'     => $barber->id,
+            'service_id'    => $service->id,
         ]);
     }
 
@@ -91,21 +91,22 @@ class BookingFlowTest extends TestCase
 
         $service = Service::create([
             'name' => 'Fade',
+            'category' => 'Corte',
             'price' => 2000,
-            'duration_minutes' => 45,
+            'duration_min' => 45,
             'is_active' => true,
         ]);
 
         $appointment = Appointment::create([
-            'barber_id' => $barber->id,
-            'service_id' => $service->id,
-            'customer_name' => 'Carlos Cliente',
-            'customer_phone' => '1234567890',
-            'date' => date('Y-m-d', strtotime('+1 day')),
-            'time' => '10:00',
-            'end_time' => '10:45',
-            'total_price' => 2000,
-            'status' => 'confirmado'
+            'barber_id'        => $barber->id,
+            'service_id'       => $service->id,
+            'customer_name'    => 'Carlos Cliente',
+            'customer_phone'   => '1234567890',
+            'appointment_date' => date('Y-m-d', strtotime('+1 day')),
+            'appointment_time' => '10:00',
+            'total_price'      => 2000,
+            'duration_min'     => 45,
+            'status'           => 'Pendiente'
         ]);
 
         $response = $this->postJson('/api/booking/cancel', [
@@ -114,8 +115,8 @@ class BookingFlowTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('appointments', [
-            'id' => $appointment->id,
-            'status' => 'cancelado'
+            'id'     => $appointment->id,
+            'status' => 'Cancelado'
         ]);
     }
 }

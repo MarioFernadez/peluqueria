@@ -10,6 +10,7 @@
         window.WA_NUMBER = '{{ preg_replace("/[^0-9]/", "", $waNumber) }}';
         window.BUSINESS_NAME = '{{ addslashes($businessName) }}';
         window.VAPID_PUBLIC_KEY = '{{ config("app.vapid_public_key", "") }}';
+        window.SERVER_DATE = '{{ now()->toDateString() }}';
     </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -827,7 +828,11 @@
 
                 generateDays(blockedDateSet = new Set()) {
                     const names = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-                    const today = new Date();
+                    // Anclamos la fecha base al día oficial del servidor (evita desfasajes si el celular del cliente usa UTC u otra zona horaria)
+                    const parts = (window.SERVER_DATE || '').split('-').map(Number);
+                    const today = parts.length === 3 
+                        ? new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0)
+                        : new Date();
                     this.availableDays = [];
                     for (let i = 0; i < 30; i++) {
                         const d = new Date(today);
@@ -835,7 +840,7 @@
                         const dow = d.getDay();
                         if (dow === 0) continue; // No domingos
                         
-                        // Obtenemos la fecha en formato YYYY-MM-DD usando la zona horaria local (evita errores de UTC)
+                        // Obtenemos la fecha en formato YYYY-MM-DD usando la zona horaria local
                         const year = d.getFullYear();
                         const month = String(d.getMonth() + 1).padStart(2, '0');
                         const day = String(d.getDate()).padStart(2, '0');
@@ -912,19 +917,16 @@
                     this.isLoadingTimes = true;
                     try {
                         const r = await fetch(`/api/booking/availability?barber_id=${this.selectedBarberId}&service_id=${this.selectedServiceId}&date=${date}`);
-                        const d = await r.json();
-                        if (d.allSlots?.length) {
-                            this.allSlots = d.allSlots;
-                            this.availableTimes = d.availableTimes || [];
-                        } else {
-                            const mock = ['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30'];
-                            this.allSlots = mock.map(t => ({ time: t, available: true, booked: null }));
-                            this.availableTimes = mock;
+                        if (!r.ok) {
+                            throw new Error('Error al consultar disponibilidad');
                         }
-                    } catch {
-                        const mock = ['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30'];
-                        this.allSlots = mock.map(t => ({ time: t, available: true, booked: null }));
-                        this.availableTimes = mock;
+                        const d = await r.json();
+                        this.allSlots = d.allSlots || [];
+                        this.availableTimes = d.availableTimes || [];
+                    } catch (err) {
+                        this.allSlots = [];
+                        this.availableTimes = [];
+                        this.showToast('⚠️ No se pudieron cargar los horarios de este día.');
                     } finally {
                         this.isLoadingTimes = false;
                     }
@@ -1111,6 +1113,7 @@
                 },
 
                 async submitBooking() {
+                    if (this.isSubmitting) return;
                     if (!this.customerName.trim()) return;
                     this.isSubmitting = true;
                     try {
@@ -1129,10 +1132,10 @@
                                 duration_min: this.durationMin
                             })
                         });
-                        const result = await res.json();
-                        this.appointmentId = result.appointment?.id || Math.floor(Math.random() * 90000 + 10000);
+                        const result = await res.json().catch(() => ({}));
 
-                        if (result.success && result.appointment?.id) {
+                        if (res.ok && result.success && result.appointment?.id) {
+                            this.appointmentId = result.appointment.id;
                             const booking = {
                                 appointment_id: result.appointment.id,
                                 date:           this.selectedDate,
@@ -1151,11 +1154,17 @@
                             this.step = 5;
                             this.showToast('✅ ¡Turno confirmado!');
                         } else {
-                             const errorMsg = result.message || 'Faltan datos en el panel. Asegurate de crear al barbero y servicio.';
-                             this.showToast('❌ Error: ' + errorMsg);
+                            const errorMsg = result.message || 'No se pudo reservar el turno. Por favor elegí otro horario disponible.';
+                            this.showToast('⚠️ ' + errorMsg);
+                            // Si el turno fue ocupado por otra persona o no está disponible, volver al paso 3 y recargar horarios
+                            this.step = 3;
+                            this.selectedTime = '';
+                            if (this.selectedDate) {
+                                await this.selectDate(this.selectedDate);
+                            }
                         }
                     } catch {
-                        this.showToast('❌ Ocurrió un error al intentar reservar.');
+                        this.showToast('❌ Ocurrió un error al intentar reservar. Por favor verificá tu conexión.');
                     } finally {
                         this.isSubmitting = false;
                     }

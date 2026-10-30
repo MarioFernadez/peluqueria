@@ -211,15 +211,26 @@
                             </div>
                             @php $currentDate = $apt->appointment_date->toDateString(); @endphp
                         @endif
-                        <div class="apt-item">
-                            <div class="time-chip">{{ \Carbon\Carbon::parse($apt->appointment_time)->format('H:i') }}</div>
+                        @php
+                            $isConflict = $apt->conflictsWithExisting();
+                            $phone = ($apt->client && $apt->client->phone) ? $apt->client->phone : $apt->customer_phone;
+                        @endphp
+                        <div class="apt-item" style="{{ $isConflict ? 'border-left: 3px solid #ef4444; background: rgba(239,68,68,0.06);' : '' }}">
+                            <div>
+                                <div class="time-chip" style="{{ $isConflict ? 'background: #ef4444; color: white;' : '' }}">
+                                    {{ \Carbon\Carbon::parse($apt->appointment_time)->format('H:i') }}
+                                </div>
+                                @if($isConflict)
+                                    <div style="font-size:0.65rem; color:#ef4444; font-weight:700; margin-top:2px;">⚠️ Superpuesto</div>
+                                @endif
+                            </div>
                             <div>
                                 <div class="apt-name">{{ $apt->client ? $apt->client->name : ($apt->customer_name ?? 'Cliente') }}</div>
                                 <div class="apt-meta">
                                     {{ $apt->service ? $apt->service->name : 'Servicio' }}
-                                    @if($apt->client && $apt->client->phone)
+                                    @if($phone)
                                         &nbsp;·&nbsp;
-                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $apt->client->phone) }}" target="_blank" style="color: var(--success); text-decoration: none;">💬 WhatsApp</a>
+                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $phone) }}" target="_blank" style="color: var(--success); text-decoration: none;">💬 WhatsApp</a>
                                     @endif
                                 </div>
                             </div>

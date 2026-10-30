@@ -58,6 +58,11 @@
         <tr>
             <td style="font-weight:600;color:var(--accent2);">
                 {{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}
+                @if($appt->conflictsWithExisting())
+                    <span style="background:#fee2e2;color:#dc2626;border:1px solid #f87171;font-size:0.7rem;padding:2px 6px;border-radius:4px;display:block;margin-top:2px;font-weight:700;" title="Este turno se superpone con otro turno del mismo barbero en este día">
+                        ⚠️ Superpuesto
+                    </span>
+                @endif
             </td>
             <td>
                 @if($appt->client)
