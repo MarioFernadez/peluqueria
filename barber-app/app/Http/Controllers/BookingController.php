@@ -146,12 +146,8 @@ class BookingController extends Controller
 
             // 2. Schedule check across entire service duration
             if ($isAvailable) {
-                // 2a. Si el barbero tiene working_days y este día no está incluido → día libre
-                if ($isDayOff) {
-                    $isAvailable     = false;
-                    $isOutOfSchedule = true;
-                // 2b. Complex schedule (buscar la clave con y sin tilde)
-                } elseif (is_array($complexSchedule) && !empty($complexSchedule)) {
+                // 2a. Si tiene complex_schedule configurado, manda complex_schedule
+                if (is_array($complexSchedule) && !empty($complexSchedule)) {
                     $dayKey = null;
                     if (isset($complexSchedule[$dayOfWeekEsp])) {
                         $dayKey = $dayOfWeekEsp;
@@ -183,9 +179,12 @@ class BookingController extends Controller
                         $isAvailable     = false;
                         $isOutOfSchedule = true;
                     }
+                // 2b. Si no tiene complex_schedule, verificar working_days
+                } elseif ($isDayOff) {
+                    $isAvailable     = false;
+                    $isOutOfSchedule = true;
                 } else {
                     // Fallback: start_time / end_time / lunch
-                    // Si el barbero no tiene horario configurado, mostramos todo
                     if ($barber->start_time && $barber->end_time) {
                         $barberStart = Carbon::parse($date . ' ' . $barber->start_time);
                         $barberEnd   = Carbon::parse($date . ' ' . $barber->end_time);
