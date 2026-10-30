@@ -106,13 +106,9 @@ class Barber extends Model
             }
 
             if (is_array($dayData)) {
-                $chunk = $start->copy();
-                while ($chunk->lt($end)) {
-                    $chunkTimeStr = $chunk->format('H:i');
-                    if (!isset($dayData[$chunkTimeStr]) || !$dayData[$chunkTimeStr]) {
-                        return false;
-                    }
-                    $chunk->addMinutes(30);
+                $startTimeStr = $start->format('H:i');
+                if (!isset($dayData[$startTimeStr]) || !$dayData[$startTimeStr]) {
+                    return false;
                 }
             }
         } elseif (is_array($complexSchedule) && !empty($complexSchedule)) {

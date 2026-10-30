@@ -171,15 +171,11 @@ class BookingController extends Controller
                             $isAvailable     = false;
                             $isOutOfSchedule = true; // day off
                         } elseif (is_array($dayData)) {
-                            $chunk = $slotStart->copy();
-                            while ($chunk->lt($slotEnd)) {
-                                $chunkTimeStr = $chunk->format('H:i');
-                                if (!isset($dayData[$chunkTimeStr]) || !$dayData[$chunkTimeStr]) {
-                                    $isAvailable     = false;
-                                    $isOutOfSchedule = true;
-                                    break;
-                                }
-                                $chunk->addMinutes(30);
+                            $startTimeStr = $slotStart->format('H:i');
+                            // Si el horario de inicio está explícitamente en false o no está configurado
+                            if (!isset($dayData[$startTimeStr]) || !$dayData[$startTimeStr]) {
+                                $isAvailable     = false;
+                                $isOutOfSchedule = true;
                             }
                         }
                     } else {
