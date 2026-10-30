@@ -39,35 +39,35 @@ class BookingController extends Controller
         $businessName = \App\Models\Setting::where('key', 'hero_title')->value('value') ?? 'Athenea Barber';
 
         return response()->json([
-            'barbers'     => $barbers,
-            'services'    => $services,
+            'barbers' => $barbers,
+            'services' => $services,
             'memberships' => $memberships,
-            'business'    => ['name' => $businessName, 'assistant_name' => 'Barbi'],
+            'business' => ['name' => $businessName, 'assistant_name' => 'Barbi'],
         ]);
     }
 
     public function getAvailability(Request $request)
     {
         $request->validate([
-            'barber_id'  => 'required|exists:barbers,id',
+            'barber_id' => 'required|exists:barbers,id',
             'service_id' => 'required|exists:services,id',
-            'date'       => 'required|date',
+            'date' => 'required|date',
         ]);
 
-        $barber  = Barber::findOrFail($request->barber_id);
+        $barber = Barber::findOrFail($request->barber_id);
         $service = Service::findOrFail($request->service_id);
-        $date    = $request->date;
+        $date = $request->date;
 
         // Check if the date is blocked globally or for this specific barber
         $blockedDate = \App\Models\BlockedDate::whereDate('date', $date)
             ->where(function ($query) use ($barber) {
                 $query->whereNull('barber_id')
-                      ->orWhere('barber_id', $barber->id);
+                    ->orWhere('barber_id', $barber->id);
             })->first();
 
         $startTime = Carbon::parse($date . ' 07:00:00');
-        $endTime   = Carbon::parse($date . ' 22:00:00');
-        $duration  = max(15, (int) ($service->duration_min ?: 30));
+        $endTime = Carbon::parse($date . ' 22:00:00');
+        $duration = max(15, (int) ($service->duration_min ?: 30));
 
         $appointments = Appointment::where('barber_id', $request->barber_id)
             ->whereDate('appointment_date', $date)
@@ -77,7 +77,7 @@ class BookingController extends Controller
         $now = now();
         $isToday = $now->toDateString() === $date;
 
-        // Pre-calculate day name in Spanish and English
+        // Pre-calculate day name in Spanish and English (with and without accents)
         $dayOfWeekEng = strtolower(Carbon::parse($date)->englishDayOfWeek);
         $dayOfWeekEsp = match ($dayOfWeekEng) {
             'monday'    => 'lunes',
@@ -89,22 +89,48 @@ class BookingController extends Controller
             'sunday'    => 'domingo',
             default     => '',
         };
+
         $complexSchedule = $barber->complex_schedule ?? null;
-        $blockedWeekly = $barber->blocked_weekly_slots ?? [];
-        $blockedForDay = $blockedWeekly[$dayOfWeekEng] ?? [];
+        $blockedWeekly   = $barber->blocked_weekly_slots ?? [];
+        $blockedForDay   = $blockedWeekly[$dayOfWeekEng] ?? [];
+
+        // Verificar si el barbero trabaja este día según working_days
+        // Normalizamos tildes para comparar "miércoles" == "miercoles", etc.
+        $normalizeDay = fn(string $d): string => mb_strtolower(str_replace(
+            ['á','é','í','ó','ú','ü'],
+            ['a','e','i','o','u','u'],
+            $d
+        ));
+        // Mapa de abreviaturas → nombre completo normalizado
+        $dayAbbrevMap = [
+            'lun' => 'lunes', 'mar' => 'martes', 'mie' => 'miercoles', 'mié' => 'miercoles',
+            'jue' => 'jueves', 'vie' => 'viernes', 'sab' => 'sabado', 'sáb' => 'sabado',
+            'dom' => 'domingo',
+        ];
+        $workingDays = $barber->working_days ?? null;
+        $isDayOff = false;
+        if (is_array($workingDays) && !empty($workingDays)) {
+            $normalizedWorkingDays = array_map(function (string $d) use ($normalizeDay, $dayAbbrevMap): string {
+                $norm = $normalizeDay($d);
+                return $dayAbbrevMap[$norm] ?? $norm;
+            }, $workingDays);
+            if (!in_array($dayOfWeekEsp, $normalizedWorkingDays, true)) {
+                $isDayOff = true;
+            }
+        }
 
         $allSlots = [];
         $currentTime = $startTime->copy();
 
         while ($currentTime->copy()->addMinutes($duration)->lte($endTime)) {
             $slotStart = $currentTime->copy();
-            $slotEnd   = $currentTime->copy()->addMinutes($duration);
+            $slotEnd = $currentTime->copy()->addMinutes($duration);
 
-            $isAvailable      = true;
+            $isAvailable = true;
             $isBlockedByAdmin = false;
-            $isOutOfSchedule  = false;
-            $isPast           = false;
-            $bookedInfo       = null;
+            $isOutOfSchedule = false;
+            $isPast = false;
+            $bookedInfo = null;
 
             // 0. Check if the entire date is blocked
             if ($blockedDate) {
@@ -115,33 +141,55 @@ class BookingController extends Controller
             // 1. Block hours that have already passed (today only)
             if ($isAvailable && $isToday && $slotStart->lte($now)) {
                 $isAvailable = false;
-                $isPast      = true;
+                $isPast = true;
             }
 
             // 2. Schedule check across entire service duration
             if ($isAvailable) {
-                if (is_array($complexSchedule) && isset($complexSchedule[$dayOfWeekEsp])) {
-                    $dayData = $complexSchedule[$dayOfWeekEsp];
-                    if ($dayData === false || $dayData === null) {
-                        $isAvailable     = false;
-                        $isOutOfSchedule = true; // day off
-                    } elseif (is_array($dayData)) {
-                        $chunk = $slotStart->copy();
-                        while ($chunk->lt($slotEnd)) {
-                            $chunkTimeStr = $chunk->format('H:i');
-                            if (!isset($dayData[$chunkTimeStr]) || !$dayData[$chunkTimeStr]) {
-                                $isAvailable     = false;
-                                $isOutOfSchedule = true;
+                // 2a. Si el barbero tiene working_days y este día no está incluido → día libre
+                if ($isDayOff) {
+                    $isAvailable     = false;
+                    $isOutOfSchedule = true;
+                // 2b. Complex schedule (buscar la clave con y sin tilde)
+                } elseif (is_array($complexSchedule) && !empty($complexSchedule)) {
+                    $dayKey = null;
+                    if (isset($complexSchedule[$dayOfWeekEsp])) {
+                        $dayKey = $dayOfWeekEsp;
+                    } else {
+                        // Buscar la clave normalizando tildes
+                        foreach (array_keys($complexSchedule) as $k) {
+                            if ($normalizeDay($k) === $dayOfWeekEsp) {
+                                $dayKey = $k;
                                 break;
                             }
-                            $chunk->addMinutes(30);
                         }
                     }
-                } elseif (is_array($complexSchedule) && !empty($complexSchedule)) {
-                    $isAvailable     = false;
-                    $isOutOfSchedule = true; // day not in schedule
+
+                    if ($dayKey !== null) {
+                        $dayData = $complexSchedule[$dayKey];
+                        if ($dayData === false || $dayData === null) {
+                            $isAvailable     = false;
+                            $isOutOfSchedule = true; // day off
+                        } elseif (is_array($dayData)) {
+                            $chunk = $slotStart->copy();
+                            while ($chunk->lt($slotEnd)) {
+                                $chunkTimeStr = $chunk->format('H:i');
+                                if (!isset($dayData[$chunkTimeStr]) || !$dayData[$chunkTimeStr]) {
+                                    $isAvailable     = false;
+                                    $isOutOfSchedule = true;
+                                    break;
+                                }
+                                $chunk->addMinutes(30);
+                            }
+                        }
+                    } else {
+                        // Día no está en el complex_schedule → día libre
+                        $isAvailable     = false;
+                        $isOutOfSchedule = true;
+                    }
                 } else {
                     // Fallback: start_time / end_time / lunch
+                    // Si el barbero no tiene horario configurado, mostramos todo
                     if ($barber->start_time && $barber->end_time) {
                         $barberStart = Carbon::parse($date . ' ' . $barber->start_time);
                         $barberEnd   = Carbon::parse($date . ' ' . $barber->end_time);
@@ -150,7 +198,7 @@ class BookingController extends Controller
                             $isOutOfSchedule = true;
                         }
                     }
-                    if ($barber->lunch_start_time && $barber->lunch_end_time) {
+                    if ($isAvailable && $barber->lunch_start_time && $barber->lunch_end_time) {
                         $lunchStart = Carbon::parse($date . ' ' . $barber->lunch_start_time);
                         $lunchEnd   = Carbon::parse($date . ' ' . $barber->lunch_end_time);
                         if ($slotStart->lt($lunchEnd) && $slotEnd->gt($lunchStart)) {
@@ -167,7 +215,7 @@ class BookingController extends Controller
                 while ($chunk->lt($slotEnd)) {
                     $chunkTimeStr = $chunk->format('H:i');
                     if (in_array($chunkTimeStr, $blockedForDay)) {
-                        $isAvailable      = false;
+                        $isAvailable = false;
                         $isBlockedByAdmin = true;
                         break;
                     }
@@ -180,7 +228,7 @@ class BookingController extends Controller
                 foreach ($appointments as $appt) {
                     $apptStart = Carbon::parse($date . ' ' . $appt->appointment_time);
                     $apptDuration = max(15, (int) ($appt->duration_min ?: 30));
-                    $apptEnd   = $apptStart->copy()->addMinutes($apptDuration);
+                    $apptEnd = $apptStart->copy()->addMinutes($apptDuration);
 
                     // Interval [slotStart, slotEnd) overlaps with [apptStart, apptEnd) if slotStart < apptEnd AND slotEnd > apptStart
                     if ($slotStart->lt($apptEnd) && $slotEnd->gt($apptStart)) {
@@ -188,7 +236,7 @@ class BookingController extends Controller
                         if ($appt->status === 'Bloqueado') {
                             $isBlockedByAdmin = true;
                         } else {
-                            $name   = $appt->customer_name ?? '';
+                            $name = $appt->customer_name ?? '';
                             $masked = mb_substr($name, 0, 1) . str_repeat('*', max(0, mb_strlen($name) - 1));
                             $bookedInfo = ['appointment_id' => $appt->id, 'customer_masked' => $masked];
                         }
@@ -198,11 +246,11 @@ class BookingController extends Controller
             }
 
             $allSlots[] = [
-                'time'                => $slotStart->format('H:i'),
-                'available'           => $isAvailable,
-                'booked'              => $bookedInfo,
+                'time' => $slotStart->format('H:i'),
+                'available' => $isAvailable,
+                'booked' => $bookedInfo,
                 'is_blocked_by_admin' => $isBlockedByAdmin,
-                'is_out_of_schedule'  => $isOutOfSchedule || $isPast,
+                'is_out_of_schedule' => $isOutOfSchedule || $isPast,
             ];
 
             $currentTime->addMinutes(30);
@@ -215,21 +263,21 @@ class BookingController extends Controller
 
         return response()->json([
             'availableTimes' => $availableTimes,
-            'allSlots'       => $allSlots,
+            'allSlots' => $allSlots,
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'customer_phone'   => 'nullable|string|max:50',
-            'barber_id'        => 'required|exists:barbers,id',
-            'service_id'       => 'required|exists:services,id',
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'nullable|string|max:50',
+            'barber_id' => 'required|exists:barbers,id',
+            'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date_format:Y-m-d',
             'appointment_time' => 'required|string|max:10',
-            'total_price'      => 'nullable|numeric',
-            'duration_min'     => 'nullable|integer',
+            'total_price' => 'nullable|numeric',
+            'duration_min' => 'nullable|integer',
         ]);
 
         $barber = Barber::findOrFail($validated['barber_id']);
@@ -280,17 +328,17 @@ class BookingController extends Controller
                 }
 
                 return Appointment::create([
-                    'customer_name'    => trim($validated['customer_name']),
-                    'customer_phone'   => $validated['customer_phone'] ?? null,
-                    'barber_id'        => $barber->id,
-                    'service_id'       => $service->id,
+                    'customer_name' => trim($validated['customer_name']),
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'barber_id' => $barber->id,
+                    'service_id' => $service->id,
                     'appointment_date' => $date,
                     'appointment_time' => $time,
-                    'total_price'      => $totalPrice,
-                    'duration_min'     => $duration,
-                    'status'           => 'Pendiente',
-                    'payment_method'   => 'efectivo',
-                    'payment_status'   => 'pendiente',
+                    'total_price' => $totalPrice,
+                    'duration_min' => $duration,
+                    'status' => 'Pendiente',
+                    'payment_method' => 'efectivo',
+                    'payment_status' => 'pendiente',
                 ]);
             });
 
@@ -302,7 +350,7 @@ class BookingController extends Controller
             }
 
             return response()->json([
-                'success'     => true,
+                'success' => true,
                 'appointment' => $appointment,
             ]);
         } finally {
@@ -357,17 +405,21 @@ class BookingController extends Controller
     public function notifyAdmin(Request $request)
     {
         $barberName = $request->barberName ?? $request->barber ?? 'un barbero';
-        if (is_array($barberName)) $barberName = reset($barberName);
+        if (is_array($barberName))
+            $barberName = reset($barberName);
 
         $serviceName = $request->serviceName ?? $request->service ?? 'un servicio';
-        if (is_array($serviceName)) $serviceName = reset($serviceName);
+        if (is_array($serviceName))
+            $serviceName = reset($serviceName);
 
         $customerName = $request->customerName ?? $request->customer_name ?? 'un cliente';
-        if (is_array($customerName)) $customerName = reset($customerName);
+        if (is_array($customerName))
+            $customerName = reset($customerName);
 
         $time = $request->time ?? '';
-        if (is_array($time)) $time = reset($time);
-        
+        if (is_array($time))
+            $time = reset($time);
+
         $title = "¡Nuevo Turno Reservado! 📅";
         $body = "{$customerName} reservó {$serviceName} con {$barberName} a las {$time}.";
 
@@ -399,10 +451,10 @@ class BookingController extends Controller
         ]);
 
         $barber = Barber::findOrFail($request->barber_id);
-        
+
         $startTime = \Carbon\Carbon::parse('07:00:00');
-        $endTime   = \Carbon\Carbon::parse('22:00:00');
-        $duration  = 30; // Standard 30min blocks for UI
+        $endTime = \Carbon\Carbon::parse('22:00:00');
+        $duration = 30; // Standard 30min blocks for UI
 
         $blockedSlots = $barber->blocked_weekly_slots ?? [];
         $blockedForDay = $blockedSlots[$request->day_of_week] ?? [];
@@ -412,9 +464,9 @@ class BookingController extends Controller
 
         while ($currentTime->copy()->addMinutes($duration)->lte($endTime)) {
             $slotStart = $currentTime->copy();
-            $slotEnd   = $currentTime->copy()->addMinutes($duration);
+            $slotEnd = $currentTime->copy()->addMinutes($duration);
             $timeStr = $slotStart->format('H:i');
-            
+
             $isAvailable = true;
             $isBlockedByAdmin = in_array($timeStr, $blockedForDay);
 
@@ -423,9 +475,9 @@ class BookingController extends Controller
             }
 
             $allSlots[] = [
-                'time'      => $timeStr,
+                'time' => $timeStr,
                 'available' => $isAvailable,
-                'booked'    => null,
+                'booked' => null,
                 'is_blocked_by_admin' => $isBlockedByAdmin
             ];
 
@@ -439,7 +491,8 @@ class BookingController extends Controller
 
     public function toggleWeeklySlot(Request $request)
     {
-        if (!Auth::check()) return abort(403);
+        if (!Auth::check())
+            return abort(403);
         $request->validate([
             'barber_id' => 'required|exists:barbers,id',
             'day_of_week' => 'required|string',
@@ -448,7 +501,7 @@ class BookingController extends Controller
 
         $barber = Barber::findOrFail($request->barber_id);
         $blockedSlots = $barber->blocked_weekly_slots ?? [];
-        
+
         if (!isset($blockedSlots[$request->day_of_week])) {
             $blockedSlots[$request->day_of_week] = [];
         }
@@ -482,16 +535,16 @@ class BookingController extends Controller
 
         $days = (int) ($request->input('days', 60));
         $from = now()->toDateString();
-        $to   = now()->addDays($days)->toDateString();
+        $to = now()->addDays($days)->toDateString();
 
         $blocked = \App\Models\BlockedDate::where(function ($query) use ($request) {
-                $query->whereNull('barber_id')
-                      ->orWhere('barber_id', $request->barber_id);
-            })
+            $query->whereNull('barber_id')
+                ->orWhere('barber_id', $request->barber_id);
+        })
             ->whereBetween('date', [$from, $to])
             ->get()
             ->map(fn($b) => [
-                'date'   => $b->date->toDateString(),
+                'date' => $b->date->toDateString(),
                 'reason' => $b->reason,
             ]);
 
